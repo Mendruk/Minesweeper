@@ -16,12 +16,22 @@ namespace Minesweeper
 
         private void pictureGameField_MouseMove(object sender, MouseEventArgs e)
         {
-            
+            game.mouseX=e.X;
+            game.mouseY=e.Y;
+
+            pictureGameField.Refresh();
         }
 
         private void timer_Tick(object sender, EventArgs e)
         {
 
+        }
+
+
+        private void pictureGameField_Click(object sender, EventArgs e)
+        {
+            game.OpenCell();
+            pictureGameField.Refresh();
         }
     }
 }

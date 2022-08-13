@@ -46,6 +46,7 @@
             this.pictureGameField.Size = new System.Drawing.Size(400, 400);
             this.pictureGameField.TabIndex = 0;
             this.pictureGameField.TabStop = false;
+            this.pictureGameField.Click += new System.EventHandler(this.pictureGameField_Click);
             this.pictureGameField.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureGameField_Paint);
             this.pictureGameField.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureGameField_MouseMove);
             // 
