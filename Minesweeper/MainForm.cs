@@ -13,5 +13,15 @@ namespace Minesweeper
         {
             game.DrawGameField(e.Graphics,pictureGameField.Width,pictureGameField.Height);
         }
+
+        private void pictureGameField_MouseMove(object sender, MouseEventArgs e)
+        {
+            
+        }
+
+        private void timer_Tick(object sender, EventArgs e)
+        {
+
+        }
     }
 }

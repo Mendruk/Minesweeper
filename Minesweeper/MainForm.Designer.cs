@@ -28,11 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.pictureGameField = new System.Windows.Forms.PictureBox();
             this.labelMinesText = new System.Windows.Forms.Label();
             this.labelMinesCount = new System.Windows.Forms.Label();
             this.labelTimer = new System.Windows.Forms.Label();
             this.buttonRestart = new System.Windows.Forms.Button();
+            this.timer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pictureGameField)).BeginInit();
             this.SuspendLayout();
             // 
@@ -45,6 +47,7 @@
             this.pictureGameField.TabIndex = 0;
             this.pictureGameField.TabStop = false;
             this.pictureGameField.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureGameField_Paint);
+            this.pictureGameField.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureGameField_MouseMove);
             // 
             // labelMinesText
             // 
@@ -82,6 +85,11 @@
             this.buttonRestart.Text = "Рестарт";
             this.buttonRestart.UseVisualStyleBackColor = true;
             // 
+            // timer
+            // 
+            this.timer.Interval = 1000;
+            this.timer.Tick += new System.EventHandler(this.timer_Tick);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -107,5 +115,6 @@
         private Label labelMinesCount;
         private Label labelTimer;
         private Button buttonRestart;
+        private System.Windows.Forms.Timer timer;
     }
 }
