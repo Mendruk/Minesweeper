@@ -3,12 +3,10 @@
 public class Game
 {
     private static readonly Random random = new();
-    private readonly Pen gridPen = Pens.Black;
-    private readonly int widthInCells = 9;
     private readonly int bombsCount = 10;
     private readonly Cell[,] cells; //[x][y]
     private readonly int heightInCells = 9;
-    private readonly Pen backLightPen = Pens.Aquamarine;
+    private readonly int widthInCells = 9;
 
     public int mouseX;
     public int mouseY;
@@ -18,8 +16,8 @@ public class Game
         cells = new Cell[widthInCells, heightInCells];
 
         for (int x = 0; x < widthInCells; x++)
-            for (int y = 0; y < heightInCells; y++)
-                cells[x, y] = new Cell();
+        for (int y = 0; y < heightInCells; y++)
+            cells[x, y] = new Cell();
 
         Start();
     }
@@ -33,15 +31,9 @@ public class Game
     private void DefineCellNumber(int x, int y)
     {
         for (int maskX = x - 1; maskX <= x + 1; maskX++)
-        {
             for (int maskY = y - 1; maskY <= y + 1; maskY++)
-            {
-                if (maskX >= 0 && maskX < widthInCells && maskY >= 0 && maskY < heightInCells)
-                {
-                    cells[maskX, maskY].number++;
-                }
-            }
-        }
+            if (maskX >= 0 && maskX < widthInCells && maskY >= 0 && maskY < heightInCells)
+                cells[maskX, maskY].number++;
     }
 
     public void OpenCell()
@@ -61,20 +53,20 @@ public class Game
         }
 
         for (int maskX = x - 1; maskX <= x + 1; maskX++)
-        {
-            for (int maskY = y - 1; maskY <= y + 1; maskY++)
+         for (int maskY = y - 1; maskY <= y + 1; maskY++)
+            if (maskX >= 0 &&
+                maskX < widthInCells && 
+                maskY >= 0 && 
+                maskY < heightInCells &&
+                !cells[maskX, maskY].isOpen 
+                && !cells[maskX, maskY].isBomb)
             {
-                if (maskX >= 0 && maskX < widthInCells && maskY >= 0 && maskY < heightInCells && !cells[maskX, maskY].isOpen && !cells[maskX, maskY].isBomb)
-                {
-                    cells[maskX, maskY].isOpen = true;
-                    if (cells[maskX, maskY].number != 0)
-                        continue;
+                cells[maskX, maskY].isOpen = true;
 
-                    OpenCellsWithRecursion(maskX, maskY);
-                }
+                OpenCellsWithRecursion(maskX, maskY);
             }
-        }
     }
+
     private void PlantNextBomb()
     {
         int randomX = random.Next(widthInCells);
@@ -94,14 +86,20 @@ public class Game
 
     public void DrawGameField(Graphics graphics, int widthInPixels, int heightInPixels)
     {
-        Cell.cellWidthInPixels = widthInPixels / widthInCells;
+        Cell.cellWidthInPixels =  widthInPixels  / widthInCells;
         Cell.cellHeightInPixels = heightInPixels / heightInCells;
 
         for (int x = 0; x < widthInCells; x++)
-            for (int y = 0; y < heightInCells; y++)
-            {
-                cells[x, y].Draw(graphics, x, y);
-            }
+        for (int y = 0; y < heightInCells; y++)
+            cells[x, y].Draw(graphics, x, y);
 
+        int backLightingCellX = mouseX / Cell.cellWidthInPixels;
+        int backLightingCellY = mouseY / Cell.cellHeightInPixels;
+        if (backLightingCellX >= 0 && 
+            backLightingCellX < widthInCells &&
+            backLightingCellY >= 0 &&
+            backLightingCellY < heightInCells)
+            cells[backLightingCellX, backLightingCellY]
+                .DrawBackLighting(graphics, backLightingCellX, backLightingCellY);
     }
 }
