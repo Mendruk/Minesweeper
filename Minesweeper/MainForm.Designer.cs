@@ -86,10 +86,11 @@
             this.buttonRestart.TabIndex = 4;
             this.buttonRestart.Text = "Рестарт";
             this.buttonRestart.UseVisualStyleBackColor = true;
+            this.buttonRestart.Click += new System.EventHandler(this.buttonRestart_Click);
             // 
             // timer
             // 
-            this.timer.Interval = 1000;
+            this.timer.Enabled = true;
             this.timer.Tick += new System.EventHandler(this.timer_Tick);
             // 
             // MainForm

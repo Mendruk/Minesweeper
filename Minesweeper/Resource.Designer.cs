@@ -63,6 +63,16 @@ namespace Minesweeper {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap CrossSprite {
+            get {
+                object obj = ResourceManager.GetObject("CrossSprite", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap FlagSprite {
             get {
                 object obj = ResourceManager.GetObject("FlagSprite", resourceCulture);

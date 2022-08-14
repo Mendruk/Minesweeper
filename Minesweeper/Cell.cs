@@ -14,23 +14,36 @@ public class Cell
         { 8, Brushes.DarkRed }
     };
 
-    private static readonly Brush mineBrush = Brushes.Black;
     private static readonly Brush closedCellBrush = Brushes.Gray;
     private static readonly Pen edgingCell = Pens.Black;
     private static readonly Pen backLightPen = Pens.Aquamarine;
+    private static readonly FontStyle cellFontStyle = FontStyle.Bold;
+    private static readonly Font cellFont = new(FontFamily.GenericMonospace, 27, cellFontStyle);
 
     private static readonly Bitmap mineSprite = Resource.MineSprite;
     private static readonly Bitmap flagSprite = Resource.FlagSprite;
+    private static readonly Bitmap crossSprite = Resource.CrossSprite;
+
+    private Rectangle cellRectangle;
 
     public static int cellWidthInPixels;
     public static int cellHeightInPixels;
 
 
-    public bool isMine = false;
-    public bool isOpen = false;
-    public bool isMarked = false;
+    public bool isMine;
+    public bool isOpen;
+    public bool isMarked;
+    public int number;
 
-    public int number = 0;
+    public Cell(int x, int y)
+    {
+        ClearCell();
+
+        int cellXInPixels = x * cellWidthInPixels;
+        int cellYInPixels = y * cellHeightInPixels;
+
+        cellRectangle = new Rectangle(cellXInPixels, cellYInPixels, cellHeightInPixels, cellWidthInPixels);
+    }
 
     public void ClearCell()
     {
@@ -39,32 +52,36 @@ public class Cell
         isMine = false;
         number = 0;
     }
-    public void Draw(Graphics graphics, int cellX, int cellY)
+
+    public void Draw(Graphics graphics)
     {
-        int cellXInPixels = cellX * cellWidthInPixels;
-        int cellYInPixels = cellY * cellHeightInPixels;
 
         if (brushes.TryGetValue(number, out Brush brush))
             if (!isMine)
-                graphics.DrawString(number.ToString(), SystemFonts.DefaultFont, brush, cellXInPixels, cellYInPixels);
+                graphics.DrawString(number.ToString(), cellFont, brush, cellRectangle);
 
         if (isMine)
-            graphics.DrawImage(mineSprite, cellXInPixels,cellYInPixels,cellHeightInPixels,cellWidthInPixels);
+            graphics.DrawImage(mineSprite, cellRectangle);
 
         if (!isOpen)
-            graphics.FillRectangle(closedCellBrush, cellXInPixels, cellYInPixels, cellWidthInPixels, cellHeightInPixels);
+            graphics.FillRectangle(closedCellBrush, cellRectangle);
 
         if (isMarked)
-            graphics.DrawImage(flagSprite, cellXInPixels, cellYInPixels, cellHeightInPixels, cellWidthInPixels);
+            graphics.DrawImage(flagSprite, cellRectangle);
 
-        graphics.DrawRectangle(edgingCell, cellXInPixels, cellYInPixels, cellWidthInPixels, cellHeightInPixels);
+
+
+        graphics.DrawRectangle(edgingCell, cellRectangle);
     }
 
-    public void DrawBackLighting(Graphics graphics, int cellX, int cellY)
+    public void DrawCross(Graphics graphics)
     {
-        int cellXInPixels = cellX * cellWidthInPixels;
-        int cellYInPixels = cellY * cellHeightInPixels;
+        graphics.DrawImage(crossSprite, cellRectangle);
+    }
 
-        graphics.DrawRectangle(backLightPen, cellXInPixels, cellYInPixels, cellWidthInPixels, cellHeightInPixels);
+    public void DrawBackLighting(Graphics graphics)
+    {
+        if(!isOpen)
+            graphics.DrawRectangle(backLightPen, cellRectangle);
     }
 }
