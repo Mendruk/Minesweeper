@@ -14,31 +14,48 @@ public class Cell
         { 8, Brushes.DarkRed }
     };
 
-    private static readonly Brush bombBrush = Brushes.Black;
+    private static readonly Brush mineBrush = Brushes.Black;
     private static readonly Brush closedCellBrush = Brushes.Gray;
     private static readonly Pen edgingCell = Pens.Black;
+    private static readonly Pen backLightPen = Pens.Aquamarine;
+
+    private static readonly Bitmap mineSprite = Resource.MineSprite;
+    private static readonly Bitmap flagSprite = Resource.FlagSprite;
+
     public static int cellWidthInPixels;
     public static int cellHeightInPixels;
-    private readonly Pen backLightPen = Pens.Aquamarine;
-    public bool isBomb = false;
+
+
+    public bool isMine = false;
     public bool isOpen = false;
+    public bool isMarked = false;
+
     public int number = 0;
 
-
+    public void ClearCell()
+    {
+        isOpen = false;
+        isMarked = false;
+        isMine = false;
+        number = 0;
+    }
     public void Draw(Graphics graphics, int cellX, int cellY)
     {
         int cellXInPixels = cellX * cellWidthInPixels;
         int cellYInPixels = cellY * cellHeightInPixels;
 
         if (brushes.TryGetValue(number, out Brush brush))
-            if (!isBomb)
+            if (!isMine)
                 graphics.DrawString(number.ToString(), SystemFonts.DefaultFont, brush, cellXInPixels, cellYInPixels);
 
-        if (isBomb)
-            graphics.DrawString("Bomb", SystemFonts.DefaultFont, bombBrush, cellXInPixels, cellYInPixels);
+        if (isMine)
+            graphics.DrawImage(mineSprite, cellXInPixels,cellYInPixels,cellHeightInPixels,cellWidthInPixels);
 
         if (!isOpen)
             graphics.FillRectangle(closedCellBrush, cellXInPixels, cellYInPixels, cellWidthInPixels, cellHeightInPixels);
+
+        if (isMarked)
+            graphics.DrawImage(flagSprite, cellXInPixels, cellYInPixels, cellHeightInPixels, cellWidthInPixels);
 
         graphics.DrawRectangle(edgingCell, cellXInPixels, cellYInPixels, cellWidthInPixels, cellHeightInPixels);
     }
@@ -47,6 +64,7 @@ public class Cell
     {
         int cellXInPixels = cellX * cellWidthInPixels;
         int cellYInPixels = cellY * cellHeightInPixels;
+
         graphics.DrawRectangle(backLightPen, cellXInPixels, cellYInPixels, cellWidthInPixels, cellHeightInPixels);
     }
 }

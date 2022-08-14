@@ -30,7 +30,16 @@ namespace Minesweeper
 
         private void pictureGameField_Click(object sender, EventArgs e)
         {
-            game.OpenCell();
+
+        }
+
+        private void pictureGameField_MouseClick(object sender, MouseEventArgs e)
+        {
+            if(e.Button==MouseButtons.Left)
+                game.OpenSelectedCell();
+            if (e.Button == MouseButtons.Right)
+                game.MarkCell();
+            labelMinesCount.Text = game.minesCount.ToString();
             pictureGameField.Refresh();
         }
     }

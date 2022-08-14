@@ -48,6 +48,7 @@
             this.pictureGameField.TabStop = false;
             this.pictureGameField.Click += new System.EventHandler(this.pictureGameField_Click);
             this.pictureGameField.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureGameField_Paint);
+            this.pictureGameField.MouseClick += new System.Windows.Forms.MouseEventHandler(this.pictureGameField_MouseClick);
             this.pictureGameField.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureGameField_MouseMove);
             // 
             // labelMinesText
