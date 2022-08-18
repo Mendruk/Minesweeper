@@ -3,10 +3,16 @@ namespace Minesweeper
     public partial class MainForm : Form
     {
         private Game game;
+
         public MainForm()
         {
             InitializeComponent();  
+
             game=new Game(pictureGameField.Width, pictureGameField.Height);
+
+            game.Defeat += ShowDefeatMessage;
+            game.Victory += ShowVictoryMessage;
+
         }
 
         private void pictureGameField_Paint(object sender, PaintEventArgs e)
@@ -25,8 +31,7 @@ namespace Minesweeper
         private void timer_Tick(object sender, EventArgs e)
         {
             game.time++;
-            labelTimer.Text = string.Format("{0}:{1}:{2}",(game.time/3600).ToString(),(game.time/600%60).ToString(),(game.time/10 % 60).ToString());
-            pictureGameField.Refresh();
+            labelTimer.Text = (game.time/360).ToString() +":"+ (game.time / 60 % 60).ToString() + ":" + (game.time % 60).ToString();
         }
 
 
@@ -43,7 +48,10 @@ namespace Minesweeper
             if (e.Button == MouseButtons.Right)
                 game.MarkCell();
 
-            labelMinesCount.Text = game.minesCount.ToString();
+            if (e.Button == MouseButtons.Middle)
+                game.SmartClick();
+
+            labelMinesCount.Text = game.MinesCount.ToString();
 
             pictureGameField.Refresh();
         }
@@ -53,6 +61,18 @@ namespace Minesweeper
             game.Start();
 
             pictureGameField.Refresh();
+        }
+
+        private void ShowDefeatMessage(object? sender, EventArgs e)
+        {
+            pictureGameField.Refresh();
+            DialogResult result = MessageBox.Show("You LOSE!", "Defeat", MessageBoxButtons.OK);
+        }
+
+        private void ShowVictoryMessage(object? sender, EventArgs e)
+        {
+            pictureGameField.Refresh();
+            DialogResult result = MessageBox.Show("You Win!", "Victory", MessageBoxButtons.OK);
         }
     }
 }

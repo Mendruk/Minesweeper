@@ -4,18 +4,18 @@ public class Game
 {
     private static readonly Random random = new();
 
-    private readonly Cell[,] cells; //[x][y]
+    private readonly Cell[,] cells; //[x,y]
     private readonly int heightInCells = 9;
     private readonly int widthInCells = 9;
-
-    private bool isEnd;
-
-    public int minesCount;
-    public int minesNumber;
-    public int time = 0;
+    private int minesNumber;
+    public int MinesCount { get; private set; }
+    public int time;
 
     public int mouseX;
     public int mouseY;
+
+    public event EventHandler Victory = delegate { };
+    public event EventHandler Defeat = delegate { };
 
     public Game(int widthInPixels, int heightInPixels)
     {
@@ -28,37 +28,48 @@ public class Game
             for (int y = 0; y < heightInCells; y++)
                 cells[x, y] = new Cell(x, y);
 
+
         Start();
     }
 
     public void Start()
     {
         time = 0;
-        isEnd = false;
-        minesCount = 10;
-        minesNumber = minesCount;
+        MinesCount = 10;
+        minesNumber = MinesCount;
 
-        for (int x = 0; x < widthInCells; x++)
-            for (int y = 0; y < heightInCells; y++)
-                cells[x, y].ClearCell();
+        foreach (Cell cell in cells)
+        {
+            cell.ClearCell();
+        }
 
         for (int i = 0; i < minesNumber; i++)
             PlantNextMine();
     }
 
-    private void DefineCellNumber(int x, int y)
+    public void DrawGameField(Graphics graphics)
     {
-        for (int maskX = x - 1; maskX <= x + 1; maskX++)
-            for (int maskY = y - 1; maskY <= y + 1; maskY++)
-                if (maskX >= 0 && maskX < widthInCells && maskY >= 0 && maskY < heightInCells)
-                    cells[maskX, maskY].number++;
+
+        foreach (Cell cell in cells)
+        {
+            cell.Draw(graphics);
+        }
+
+        int backLightingCellX = mouseX / Cell.cellWidthInPixels;
+        int backLightingCellY = mouseY / Cell.cellHeightInPixels;
+
+        if (backLightingCellX >= 0 && backLightingCellX < widthInCells &&
+            backLightingCellY >= 0 && backLightingCellY < heightInCells)
+            cells[backLightingCellX, backLightingCellY].DrawBackLighting(graphics);
     }
 
     public void OpenSelectedCell()
     {
-        int x = mouseX / Cell.cellWidthInPixels;
-        int y = mouseY / Cell.cellHeightInPixels;
+        OpenSelectedCell(mouseX / Cell.cellWidthInPixels, mouseY / Cell.cellHeightInPixels);
+    }
 
+    public void OpenSelectedCell(int x, int y)
+    {
         if (cells[x, y].isMarked)
             return;
 
@@ -66,8 +77,7 @@ public class Game
         {
             OpenCellsWithMine();
 
-            ShowFailMessage();
-            isEnd = true;
+            Defeat(this, EventArgs.Empty);
 
             Start();
 
@@ -78,16 +88,18 @@ public class Game
 
         int openedCellCount = 0;
 
-        for (int i = 0; i < widthInCells; i++)
-            for (int j = 0; j < heightInCells; j++)
-                if (cells[i, j].isOpen)
-                    openedCellCount++;
+        foreach (Cell cell in cells)
+        {
+            if (cell.isOpen)
+                openedCellCount++;
+        }
 
         if (cells.Length - openedCellCount == minesNumber)
         {
             OpenCellsWithMine();
-            ShowViktoryMessage();
-            isEnd = true;
+
+            Victory(this, EventArgs.Empty);
+
             Start();
         }
     }
@@ -100,18 +112,33 @@ public class Game
             return;
         }
 
-        for (int maskX = x - 1; maskX <= x + 1; maskX++)
-            for (int maskY = y - 1; maskY <= y + 1; maskY++)
-                if (maskX >= 0 && maskX < widthInCells &&
-                    maskY >= 0 && maskY < heightInCells &&
-                    !cells[maskX, maskY].isOpen &&
-                    !cells[maskX, maskY].isMine &&
-                    !cells[maskX, maskY].isMarked)
-                {
-                    cells[maskX, maskY].isOpen = true;
+        Queue<Cell> cellsQueue = new();
+        cellsQueue.Enqueue(cells[x, y]);
 
-                    OpenOtherCells(maskX, maskY);
+        while (cellsQueue.Count > 0)
+        {
+            Cell cell = cellsQueue.Dequeue();
+
+            cell.isOpen = true;
+
+            if (cell.number != 0)
+                continue;
+
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    if (cell.X + dx < 0 || cell.X + dx >= widthInCells ||
+                        cell.Y + dy < 0 || cell.Y + dy >= heightInCells)
+                        continue;
+
+                    if (cells[cell.X + dx, cell.Y + dy].isOpen ||
+                        cells[cell.X + dx, cell.Y + dy].isMine ||
+                        cells[cell.X + dx, cell.Y + dy].isMarked)
+                        continue;
+
+                    cellsQueue.Enqueue(cells[cell.X + dx, cell.Y + dy]);
                 }
+        }
     }
 
     public void MarkCell()
@@ -122,21 +149,54 @@ public class Game
         if (cells[x, y].isMarked)
         {
             cells[x, y].isMarked = false;
-            minesCount++;
+            MinesCount++;
         }
-        else if (minesCount > 0 && !cells[x, y].isOpen)
+        else if (MinesCount > 0 && !cells[x, y].isOpen)
         {
             cells[x, y].isMarked = true;
-            minesCount--;
+            MinesCount--;
         }
+    }
+
+    public void SmartClick()
+    {
+        int x = mouseX / Cell.cellWidthInPixels;
+        int y = mouseY / Cell.cellHeightInPixels;
+        int flagNumber = 0;
+
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dy = -1; dy <= 1; dy++)
+                if (x + dx >= 0 && x + dx < widthInCells &&
+                    y + dy >= 0 && y + dy < heightInCells &&
+                    cells[x + dx, y + dy].isMarked)
+                    flagNumber++;
+
+        if (cells[x, y].number == flagNumber)
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                    if (x + dx >= 0 && x + dx < widthInCells &&
+                        y + dy >= 0 && y + dy < heightInCells &&
+                        !cells[x + dx, y + dy].isOpen &&
+                        !cells[x + dy, y + dy].isMarked)
+                    {
+                        OpenSelectedCell(x + dx, y + dy);
+                    }
     }
 
     private void OpenCellsWithMine()
     {
-        for (int x = 0; x < widthInCells; x++)
-            for (int y = 0; y < heightInCells; y++)
-                if (cells[x, y].isMine && !cells[x, y].isMarked)
-                    cells[x, y].isOpen = true;
+        foreach (Cell cell in cells)
+            if (cell.isMine &&
+               !cell.isMarked)
+                cell.isOpen = true;
+    }
+
+    private void DefineCellNumber(int x, int y)
+    {
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dy = -1; dy <= 1; dy++)
+                if (x + dx >= 0 && x + dx < widthInCells && y + dy >= 0 && y + dy < heightInCells)
+                    cells[x + dx, y + dy].number++;
     }
 
     private void PlantNextMine()
@@ -156,36 +216,5 @@ public class Game
         }
     }
 
-    private void ShowFailMessage()
-    {
-        DialogResult result = MessageBox.Show("You LOSE!", "Fail", MessageBoxButtons.OK);
-    }
 
-    private void ShowViktoryMessage()
-    {
-        DialogResult result = MessageBox.Show("You Win!", "Viktory", MessageBoxButtons.OK);
-
-    }
-    public void DrawGameField(Graphics graphics)
-    {
-
-        for (int x = 0; x < widthInCells; x++)
-            for (int y = 0; y < heightInCells; y++)
-                cells[x, y].Draw(graphics);
-
-        int backLightingCellX = mouseX / Cell.cellWidthInPixels;
-        int backLightingCellY = mouseY / Cell.cellHeightInPixels;
-
-        if (backLightingCellX >= 0 && backLightingCellX < widthInCells &&
-            backLightingCellY >= 0 && backLightingCellY < heightInCells)
-            cells[backLightingCellX, backLightingCellY].DrawBackLighting(graphics);
-
-        if (isEnd)
-        {
-            for (int x = 0; x < widthInCells; x++)
-                for (int y = 0; y < heightInCells; y++)
-                    if (cells[x, y].isMarked && !cells[x, y].isMine)
-                        cells[x, y].DrawCross(graphics);
-        }
-    }
 }

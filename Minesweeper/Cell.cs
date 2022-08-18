@@ -29,15 +29,20 @@ public class Cell
     public static int cellWidthInPixels;
     public static int cellHeightInPixels;
 
-
     public bool isMine;
     public bool isOpen;
     public bool isMarked;
     public int number;
 
+    public int X { get; }
+    public int Y { get; }
+
     public Cell(int x, int y)
     {
         ClearCell();
+
+        X = x;
+        Y = y;
 
         int cellXInPixels = x * cellWidthInPixels;
         int cellYInPixels = y * cellHeightInPixels;
@@ -69,19 +74,18 @@ public class Cell
         if (isMarked)
             graphics.DrawImage(flagSprite, cellRectangle);
 
-
-
         graphics.DrawRectangle(edgingCell, cellRectangle);
-    }
-
-    public void DrawCross(Graphics graphics)
-    {
-        graphics.DrawImage(crossSprite, cellRectangle);
     }
 
     public void DrawBackLighting(Graphics graphics)
     {
         if(!isOpen)
             graphics.DrawRectangle(backLightPen, cellRectangle);
+    }
+
+    public void DrawCross(Graphics graphics)
+    {
+        if (isMarked && !isMine)
+            graphics.DrawImage(crossSprite, cellRectangle);
     }
 }
