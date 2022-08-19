@@ -6,13 +6,11 @@ namespace Minesweeper
 
         public MainForm()
         {
-            InitializeComponent();  
 
-            game=new Game(pictureGameField.Width, pictureGameField.Height);
-
+            InitializeComponent();
+            game = new Game(pictureGameField.Width, pictureGameField.Height);
             game.Defeat += ShowDefeatMessage;
             game.Victory += ShowVictoryMessage;
-
         }
 
         private void pictureGameField_Paint(object sender, PaintEventArgs e)
@@ -22,16 +20,13 @@ namespace Minesweeper
 
         private void pictureGameField_MouseMove(object sender, MouseEventArgs e)
         {
-            game.mouseX=e.X;
-            game.mouseY=e.Y;
-
             pictureGameField.Refresh();
         }
 
         private void timer_Tick(object sender, EventArgs e)
         {
             game.time++;
-            labelTimer.Text = (game.time/360).ToString() +":"+ (game.time / 60 % 60).ToString() + ":" + (game.time % 60).ToString();
+            labelTimer.Text = game.time / 360 + ":" + game.time / 60 % 60 + ":" + game.time % 60;
         }
 
 
@@ -42,14 +37,14 @@ namespace Minesweeper
 
         private void pictureGameField_MouseClick(object sender, MouseEventArgs e)
         {
-            if(e.Button==MouseButtons.Left)
-                game.OpenSelectedCell();
+            if (e.Button == MouseButtons.Left)
+                game.TryOpenSelectedCell(e.X,e.Y);
 
             if (e.Button == MouseButtons.Right)
-                game.MarkCell();
+                game.MarkCell(e.X,e.Y);
 
             if (e.Button == MouseButtons.Middle)
-                game.SmartClick();
+                game.SmartClick(e.X,e.Y);
 
             labelMinesCount.Text = game.MinesCount.ToString();
 
@@ -58,7 +53,7 @@ namespace Minesweeper
 
         private void buttonRestart_Click(object sender, EventArgs e)
         {
-            game.Start();
+            game.PrepareToStart();
 
             pictureGameField.Refresh();
         }

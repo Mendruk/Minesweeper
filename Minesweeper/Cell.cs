@@ -32,6 +32,7 @@ public class Cell
     public bool isMine;
     public bool isOpen;
     public bool isMarked;
+    public bool isCross;
     public int number;
 
     public int X { get; }
@@ -55,10 +56,11 @@ public class Cell
         isOpen = false;
         isMarked = false;
         isMine = false;
+        isCross = false;
         number = 0;
     }
 
-    public void Draw(Graphics graphics)
+    public void DrawCell(Graphics graphics)
     {
 
         if (brushes.TryGetValue(number, out Brush brush))
@@ -74,18 +76,15 @@ public class Cell
         if (isMarked)
             graphics.DrawImage(flagSprite, cellRectangle);
 
+        if (isCross)
+            graphics.DrawImage(crossSprite, cellRectangle);
+
         graphics.DrawRectangle(edgingCell, cellRectangle);
     }
 
     public void DrawBackLighting(Graphics graphics)
     {
-        if(!isOpen)
+        if (!isOpen)
             graphics.DrawRectangle(backLightPen, cellRectangle);
-    }
-
-    public void DrawCross(Graphics graphics)
-    {
-        if (isMarked && !isMine)
-            graphics.DrawImage(crossSprite, cellRectangle);
     }
 }
