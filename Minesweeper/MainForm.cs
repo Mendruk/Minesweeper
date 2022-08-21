@@ -4,9 +4,11 @@ namespace Minesweeper
     {
         private Game game;
 
+        private int mouseX;
+        private int mouseY;
+
         public MainForm()
         {
-
             InitializeComponent();
             game = new Game(pictureGameField.Width, pictureGameField.Height);
             game.Defeat += ShowDefeatMessage;
@@ -20,13 +22,20 @@ namespace Minesweeper
 
         private void pictureGameField_MouseMove(object sender, MouseEventArgs e)
         {
-            pictureGameField.Refresh();
+            mouseX=e.X;
+            mouseY=e.Y;
+
         }
 
         private void timer_Tick(object sender, EventArgs e)
         {
-            game.time++;
-            labelTimer.Text = game.time / 360 + ":" + game.time / 60 % 60 + ":" + game.time % 60;
+            game.MouseX=mouseX;
+            game.MouseY=mouseY;
+
+            game.Time++;//Interval = 100
+            labelTimer.Text = game.Time / 3600 + ":" + game.Time / 600 % 60 + ":" + game.Time/10 % 60;
+
+            pictureGameField.Refresh();
         }
 
 
