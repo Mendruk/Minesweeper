@@ -13,14 +13,12 @@ public class Cell
         { 7, Brushes.DarkRed },
         { 8, Brushes.DarkRed }
     };
-
-    private static readonly Brush closedCellBrush = Brushes.Gray;
-    private static readonly Pen edgingCell = Pens.Black;
-    private static readonly Pen backLightPen = Pens.Aquamarine;
-
     private static readonly FontStyle cellFontStyle = FontStyle.Bold;
-    private static readonly Font cellFont = new(FontFamily.GenericMonospace, 27, cellFontStyle);
+    private static readonly Font cellFont = new(FontFamily.GenericMonospace, 25, cellFontStyle);
+    private static readonly StringFormat format = new();
 
+    private static readonly Bitmap closedCellSprite = Resource.ClosedCellSprite;
+    private static readonly Bitmap selectedCellSprite = Resource.SelectedCellSprite;
     private static readonly Bitmap mineSprite = Resource.MineSprite;
     private static readonly Bitmap flagSprite = Resource.FlagSprite;
     private static readonly Bitmap crossSprite = Resource.CrossSprite;
@@ -38,6 +36,8 @@ public class Cell
 
     public Cell(int x, int y)
     {
+        format.Alignment = StringAlignment.Center;
+
         ClearCell();
 
         X = x;
@@ -63,28 +63,27 @@ public class Cell
 
     public void DrawCell(Graphics graphics)
     {
-        if (brushes.TryGetValue(Number, out Brush brush))
-            if (!IsMine)
-                graphics.DrawString(Number.ToString(), cellFont, brush, cellRectangle);
+        if (brushes.TryGetValue(Number, out Brush brush)&&!IsMine)
+            graphics.DrawString(Number.ToString(), cellFont, brush, cellRectangle,format);
 
         if (IsMine)
             graphics.DrawImage(mineSprite, cellRectangle);
 
         if (!IsOpen)
-            graphics.FillRectangle(closedCellBrush, cellRectangle);
+            graphics.DrawImage(closedCellSprite, cellRectangle);
+        else
+            graphics.DrawRectangle(Pens.Black,cellRectangle);
 
         if (IsMarked)
             graphics.DrawImage(flagSprite, cellRectangle);
 
         if (IsCross)
             graphics.DrawImage(crossSprite, cellRectangle);
-
-        graphics.DrawRectangle(edgingCell, cellRectangle);
     }
 
     public void DrawBackLighting(Graphics graphics)
     {
-        if (!IsOpen)
-            graphics.DrawRectangle(backLightPen, cellRectangle);
+        if (!IsOpen&&!IsMarked)
+            graphics.DrawImage(selectedCellSprite, cellRectangle);
     }
 }

@@ -63,6 +63,16 @@ namespace Minesweeper {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap ClosedCellSprite {
+            get {
+                object obj = ResourceManager.GetObject("ClosedCellSprite", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap CrossSprite {
             get {
                 object obj = ResourceManager.GetObject("CrossSprite", resourceCulture);
@@ -86,6 +96,16 @@ namespace Minesweeper {
         public static System.Drawing.Bitmap MineSprite {
             get {
                 object obj = ResourceManager.GetObject("MineSprite", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap SelectedCellSprite {
+            get {
+                object obj = ResourceManager.GetObject("SelectedCellSprite", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

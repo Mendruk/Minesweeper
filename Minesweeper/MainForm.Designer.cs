@@ -40,7 +40,7 @@
             // 
             // pictureGameField
             // 
-            this.pictureGameField.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.pictureGameField.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.pictureGameField.Location = new System.Drawing.Point(12, 12);
             this.pictureGameField.Name = "pictureGameField";
             this.pictureGameField.Size = new System.Drawing.Size(400, 400);
