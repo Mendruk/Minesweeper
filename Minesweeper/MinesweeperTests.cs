@@ -19,7 +19,7 @@ namespace Minesweeper
         {
             Game game = new(100, 100);
 
-            game.MarkCell(0,0);
+            game.MarkCell();
             int expectedResult = game.MinesCount;
 
             Assert.That(expectedResult, Is.EqualTo(9));
@@ -30,8 +30,8 @@ namespace Minesweeper
         {
             Game game = new(100, 100);
 
-            game.MarkCell(0, 0);
-            game.MarkCell(0, 0);
+            game.MarkCell();
+            game.MarkCell();
             int expectedResult = game.MinesCount;
 
             Assert.That(expectedResult, Is.EqualTo(10));
@@ -41,7 +41,7 @@ namespace Minesweeper
         public void TestTryOpenSelectedCellWithFlag()
         {
             Game game = new(100, 100);
-            game.MarkCell(0, 0);
+            game.MarkCell();
             bool expectedResult = game.TryOpenSelectedCell(0, 0);
 
             Assert.That(expectedResult, Is.EqualTo(false));

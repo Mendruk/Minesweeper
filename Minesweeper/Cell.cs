@@ -13,6 +13,7 @@ public class Cell
         { 7, Brushes.DarkRed },
         { 8, Brushes.DarkRed }
     };
+
     private static readonly FontStyle cellFontStyle = FontStyle.Bold;
     private static readonly Font cellFont = new(FontFamily.GenericMonospace, 25, cellFontStyle);
     private static readonly StringFormat format = new();
@@ -22,11 +23,11 @@ public class Cell
     private static readonly Bitmap mineSprite = Resource.MineSprite;
     private static readonly Bitmap flagSprite = Resource.FlagSprite;
     private static readonly Bitmap crossSprite = Resource.CrossSprite;
-    
-    private readonly Rectangle cellRectangle;
-    
+
     public static int CellWidthInPixels;
     public static int CellHeightInPixels;
+
+    private readonly Rectangle cellRectangle;
 
     public bool IsCross;
     public bool IsMarked;
@@ -63,8 +64,8 @@ public class Cell
 
     public void DrawCell(Graphics graphics)
     {
-        if (brushes.TryGetValue(Number, out Brush brush)&&!IsMine)
-            graphics.DrawString(Number.ToString(), cellFont, brush, cellRectangle,format);
+        if (brushes.TryGetValue(Number, out Brush? brush) && !IsMine)
+            graphics.DrawString(Number.ToString(), cellFont, brush, cellRectangle, format);
 
         if (IsMine)
             graphics.DrawImage(mineSprite, cellRectangle);
@@ -72,7 +73,7 @@ public class Cell
         if (!IsOpen)
             graphics.DrawImage(closedCellSprite, cellRectangle);
         else
-            graphics.DrawRectangle(Pens.Black,cellRectangle);
+            graphics.DrawRectangle(Pens.Black, cellRectangle);
 
         if (IsMarked)
             graphics.DrawImage(flagSprite, cellRectangle);
@@ -83,7 +84,7 @@ public class Cell
 
     public void DrawBackLighting(Graphics graphics)
     {
-        if (!IsOpen&&!IsMarked)
+        if (!IsOpen && !IsMarked)
             graphics.DrawImage(selectedCellSprite, cellRectangle);
     }
 }

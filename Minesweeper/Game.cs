@@ -5,19 +5,13 @@ public class Game
     private static readonly Random random = new();
 
     private readonly Cell[,] cells; //[x,y]
+    private Cell selectedCell;
     private readonly int heightInCells = 9;
     private readonly int widthInCells = 9;
+    private bool isStarted;
     private int minesNumber;
-    private bool isEnd = false;
 
     public int Time;
-    public int MouseX;
-    public int MouseY;
-
-    public int MinesCount { get; private set; }
-
-    public event EventHandler Victory = delegate { };
-    public event EventHandler Defeat = delegate { };
 
     public Game(int widthInPixels, int heightInPixels)
     {
@@ -30,62 +24,93 @@ public class Game
             for (int y = 0; y < heightInCells; y++)
                 cells[x, y] = new Cell(x, y);
 
-        PrepareToStart();
+        selectedCell = cells[0, 0];
 
+        PrepareToStart();
+    }
+
+    public int MinesCount { get; private set; }
+
+    public event EventHandler Victory = delegate { };
+    public event EventHandler Defeat = delegate { };
+
+    public event EventHandler StopTimer = delegate { };
+    public event EventHandler StartTimer = delegate { };
+
+    public event EventHandler ChangeSelectedCell = delegate { };
+
+    public void SelectCell(int mouseX, int mouseY)
+    {
+        int x = mouseX / Cell.CellWidthInPixels;
+        int y = mouseY / Cell.CellHeightInPixels;
+
+        if (x >= 0 && x < widthInCells &&
+            y >= 0 && y < heightInCells &&
+            selectedCell != cells[x, y])
+        {
+            selectedCell = cells[x, y];
+            ChangeSelectedCell(this, EventArgs.Empty);
+        }
+    }
+
+    public void PrepareToStart()
+    {
+        isStarted = false;
+        MinesCount = 10;
+        minesNumber = MinesCount;
+        Time = 0;
+
+        foreach (Cell cell in cells)
+            cell.ClearCell();
     }
 
     private void Start(int x, int y)
     {
         for (int i = 0; i < minesNumber; i++)
             PlantNextMineExceptSelectedCell(x, y);
-    }
 
-    public void PrepareToStart()
-    {
-        Time = 0;
-        isEnd = true;
-        MinesCount = 10;
-        minesNumber = MinesCount;
-
-        foreach (Cell cell in cells)
-        {
-            cell.ClearCell();
-        }
+        StartTimer(this, EventArgs.Empty);
     }
 
     public void DrawGameField(Graphics graphics)
     {
-        int x = MouseX / Cell.CellWidthInPixels;
-        int y = MouseY/ Cell.CellHeightInPixels;
-
         foreach (Cell cell in cells)
-        {
             cell.DrawCell(graphics);
-        }
 
-        if (x >= 0 && x < widthInCells &&
-            y  >= 0 && y  < heightInCells)
-            cells[x,y].DrawBackLighting(graphics);
+        if (selectedCell != null)
+            selectedCell.DrawBackLighting(graphics);
+    }
+    public bool TryOpenSelectedCell()
+    {
+        int x=selectedCell.X;
+        int y=selectedCell.Y;
+
+        return TryOpenSelectedCell(x, y);
     }
 
-    //TODO
-    public bool TryOpenSelectedCell(int mouseX, int mouseY)
+    public bool TryOpenSelectedCell(Cell cell)
     {
-        int x = mouseX / Cell.CellWidthInPixels;
-        int y = mouseY / Cell.CellHeightInPixels;
+        return TryOpenSelectedCell(cell.X, cell.Y);
+    }
 
-        if (isEnd)
+    public bool TryOpenSelectedCell(int x, int y)
+    {
+        if (!isStarted)
         {
             Start(x, y);
-            isEnd = false;
+            isStarted = true;
         }
 
-        if (cells[x, y].IsMarked)
+        if (cells[x, y].IsMarked &&
+            x >= 0 && x < widthInCells &&
+            y >= 0 && y < heightInCells)
             return false;
 
-        if (cells[x, y].IsMine)
+        if (cells[x, y].IsMine)//Defeat
         {
             OpenCellsWithMine();
+
+            StopTimer(this, EventArgs.Empty);
 
             Defeat(this, EventArgs.Empty);
 
@@ -96,10 +121,11 @@ public class Game
 
         OpenOtherCells(x, y);
 
-
         if (CheckForVictory())
         {
             OpenCellsWithMine();
+
+            StopTimer(this, EventArgs.Empty);
 
             Victory(this, EventArgs.Empty);
 
@@ -107,6 +133,7 @@ public class Game
 
             return false;
         }
+
         return true;
     }
 
@@ -115,10 +142,8 @@ public class Game
         int openedCellCount = 0;
 
         foreach (Cell cell in cells)
-        {
             if (cell.IsOpen)
                 openedCellCount++;
-        }
 
         if (cells.Length - openedCellCount == minesNumber)
             return true;
@@ -146,27 +171,20 @@ public class Game
             if (cell.Number != 0)
                 continue;
 
-            for (int dx = -1; dx <= 1; dx++)
-                for (int dy = -1; dy <= 1; dy++)
-                {
-                    if (cell.X + dx < 0 || cell.X + dx >= widthInCells ||
-                        cell.Y + dy < 0 || cell.Y + dy >= heightInCells)
-                        continue;
-
-                    if (cells[cell.X + dx, cell.Y + dy].IsOpen ||
-                        cells[cell.X + dx, cell.Y + dy].IsMine ||
-                        cells[cell.X + dx, cell.Y + dy].IsMarked)
-                        continue;
-
-                    cellsQueue.Enqueue(cells[cell.X + dx, cell.Y + dy]);
-                }
+            ActionAroundCell(cell.X, cell.Y, (x, y) =>
+            {
+                if (!cells[x, y].IsOpen &&
+                    !cells[x, y].IsMine &&
+                    !cells[x, y].IsMarked)
+                    cellsQueue.Enqueue(cells[x, y]);
+            });
         }
     }
 
-    public void MarkCell(int mouseX, int mouseY)
+    public void MarkCell()
     {
-        int x = mouseX / Cell.CellWidthInPixels;
-        int y = mouseY / Cell.CellHeightInPixels;
+        int x = selectedCell.X;
+        int y = selectedCell.Y;
 
         if (cells[x, y].IsMarked)
         {
@@ -179,34 +197,42 @@ public class Game
             MinesCount--;
         }
     }
-    //TODO
-    public void SmartClick(int mouseX, int mouseY)
+
+    public void SmartClick()
     {
-        int x = mouseX / Cell.CellWidthInPixels;
-        int y = mouseY / Cell.CellHeightInPixels;
+        int x = selectedCell.X;
+        int y = selectedCell.Y;
 
         int flagNumber = 0;
 
-        for (int dx = -1; dx <= 1; dx++)
-            for (int dy = -1; dy <= 1; dy++)
-                if (x + dx >= 0 && x + dx < widthInCells &&
-                    y + dy >= 0 && y + dy < heightInCells &&
-                    cells[x + dx, y + dy].IsMarked)
-                    flagNumber++;
+        ActionAroundCell(x, y, (x, y) =>
+        {
+            if (cells[x, y].IsMarked)
+                flagNumber++;
+        });
 
         if (cells[x, y].Number == flagNumber)
-            for (int dx = -1; dx <= 1; dx++)
-                for (int dy = -1; dy <= 1; dy++)
-                    if (x + dx >= 0 && x + dx < widthInCells &&
-                        y + dy >= 0 && y + dy < heightInCells &&
-                        !cells[x + dx, y + dy].IsOpen &&
-                        !cells[x + dx, y + dy].IsMarked)
-                    {
-                        if (!TryOpenSelectedCell((x + dx) * Cell.CellWidthInPixels, (y + dy) * Cell.CellHeightInPixels))
-                        {
-                            return;
-                        }
-                    }
+        {
+            List<Cell> cellsToOpen = new();
+
+            ActionAroundCell(x, y, (x, y) =>
+            {
+                if (!cells[x, y].IsOpen &&
+                    !cells[x, y].IsMarked)
+                    cellsToOpen.Add(cells[x, y]);
+            });
+
+            foreach (Cell cell in cellsToOpen)
+            {
+                if (TryOpenSelectedCell(cell))
+                    cell.IsOpen = true;
+            }
+        }
+    }
+
+    private void DefineCellNumberAroundCell(int x, int y)
+    {
+        ActionAroundCell(x, y, (x, y) => cells[x, y].Number++);
     }
 
     private void OpenCellsWithMine()
@@ -218,16 +244,6 @@ public class Game
             if (cell.IsMine && !cell.IsMarked)
                 cell.IsOpen = true;
         }
-
-    }
-
-    private void DefineCellNumberAroundCell(int x, int y)
-    {
-        for (int dx = -1; dx <= 1; dx++)
-            for (int dy = -1; dy <= 1; dy++)
-                if (x + dx >= 0 && x + dx < widthInCells &&
-                    y + dy >= 0 && y + dy < heightInCells)
-                    cells[x + dx, y + dy].Number++;
     }
 
     private void PlantNextMineExceptSelectedCell(int x, int y)
@@ -240,12 +256,18 @@ public class Game
             cells[randomX, randomY].IsMine = true;
             DefineCellNumberAroundCell(randomX, randomY);
         }
-
         else
         {
             PlantNextMineExceptSelectedCell(x, y);
         }
     }
 
-
+    private void ActionAroundCell(int x, int y, Action<int, int> action)
+    {
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dy = -1; dy <= 1; dy++)
+                if (x + dx >= 0 && x + dx < widthInCells &&
+                    y + dy >= 0 && y + dy < heightInCells)
+                    action(x + dx, y + dy);
+    }
 }

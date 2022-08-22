@@ -4,38 +4,37 @@ namespace Minesweeper
     {
         private Game game;
 
-        private int mouseX;
-        private int mouseY;
-
         public MainForm()
         {
             InitializeComponent();
             game = new Game(pictureGameField.Width, pictureGameField.Height);
+            timer.Stop();
+
             game.Defeat += ShowDefeatMessage;
             game.Victory += ShowVictoryMessage;
+
+            game.StartTimer += StartTimer;
+            game.StopTimer += StopTimer;
+
+            game.ChangeSelectedCell += RefreshGameField;
+
         }
 
         private void pictureGameField_Paint(object sender, PaintEventArgs e)
         {
             game.DrawGameField(e.Graphics);
+            labelTimer.Text = string.Format("{0}:{1,0:00}:{2,0:00}", game.Time / 360, game.Time / 60 % 60, game.Time % 60);
         }
 
         private void pictureGameField_MouseMove(object sender, MouseEventArgs e)
         {
-            mouseX=e.X;
-            mouseY=e.Y;
-
+            game.SelectCell(e.X,e.Y);
         }
 
         private void timer_Tick(object sender, EventArgs e)
         {
-            game.MouseX=mouseX;
-            game.MouseY=mouseY;
-
-            game.Time++;//Interval = 100
-            labelTimer.Text = game.Time / 3600 + ":" + game.Time / 600 % 60 + ":" + game.Time/10 % 60;
-
-            pictureGameField.Refresh();
+            game.Time++;
+            labelTimer.Text = string.Format("{0}:{1,0:00}:{2,0:00}", game.Time / 360, game.Time / 60 % 60, game.Time % 60);
         }
 
 
@@ -47,13 +46,13 @@ namespace Minesweeper
         private void pictureGameField_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
-                game.TryOpenSelectedCell(e.X,e.Y);
+                game.TryOpenSelectedCell();
 
             if (e.Button == MouseButtons.Right)
-                game.MarkCell(e.X,e.Y);
+                game.MarkCell();
 
             if (e.Button == MouseButtons.Middle)
-                game.SmartClick(e.X,e.Y);
+                game.SmartClick();
 
             labelMinesCount.Text = game.MinesCount.ToString();
 
@@ -61,9 +60,9 @@ namespace Minesweeper
         }
 
         private void buttonRestart_Click(object sender, EventArgs e)
-        {
+        {   
+            timer.Stop();
             game.PrepareToStart();
-
             pictureGameField.Refresh();
         }
 
@@ -77,6 +76,20 @@ namespace Minesweeper
         {
             pictureGameField.Refresh();
             DialogResult result = MessageBox.Show("You Win!", "Victory", MessageBoxButtons.OK);
+        }
+
+        private void StartTimer(object? sender, EventArgs e)
+        {
+            timer.Start();
+        }
+
+        private void StopTimer(object? sender, EventArgs e)
+        {
+            timer.Stop();
+        }
+        private void RefreshGameField(object? sender, EventArgs e)
+        {
+            pictureGameField.Refresh();
         }
     }
 }
