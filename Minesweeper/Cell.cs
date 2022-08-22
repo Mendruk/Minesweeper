@@ -26,13 +26,13 @@ public class Cell
 
     private readonly Rectangle cellRectangle;
 
-    public bool IsCross;
+    public bool IsIncorrectlyMarked;
     public bool IsMarked;
-    public bool IsMine;
+    public bool IsMined;
     public bool IsOpen;
     public int Number;
 
-    public Cell(int x, int y, int widthInPixels, int heightInPixels)
+    public Cell(int x, int y, int cellSizeInPixels)
     {
         format.Alignment = StringAlignment.Center;
 
@@ -41,7 +41,7 @@ public class Cell
         X = x;
         Y = y;
 
-        cellRectangle = new Rectangle(x * widthInPixels, y * heightInPixels, widthInPixels, heightInPixels);
+        cellRectangle = new Rectangle(x * cellSizeInPixels, y * cellSizeInPixels, cellSizeInPixels, cellSizeInPixels);
     }
 
     public int X { get; }
@@ -51,17 +51,17 @@ public class Cell
     {
         IsOpen = false;
         IsMarked = false;
-        IsMine = false;
-        IsCross = false;
+        IsMined = false;
+        IsIncorrectlyMarked = false;
         Number = 0;
     }
 
     public void DrawCell(Graphics graphics)
     {
-        if (brushes.TryGetValue(Number, out Brush? brush) && !IsMine && IsOpen)
+        if (brushes.TryGetValue(Number, out Brush? brush) && !IsMined && IsOpen)
             graphics.DrawString(Number.ToString(), cellFont, brush, cellRectangle, format);
 
-        if (IsMine && IsOpen)
+        if (IsMined && IsOpen)
             graphics.DrawImage(mineSprite, cellRectangle);
 
         if (!IsOpen)
@@ -72,7 +72,7 @@ public class Cell
         if (IsMarked)
             graphics.DrawImage(flagSprite, cellRectangle);
 
-        if (IsCross)
+        if (IsIncorrectlyMarked)
             graphics.DrawImage(crossSprite, cellRectangle);
     }
 

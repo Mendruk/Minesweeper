@@ -1,103 +1,109 @@
-namespace Minesweeper
-{
-    public partial class MainForm : Form
+namespace Minesweeper;
+
+public partial class MainForm : Form
+{    
+    private readonly Game game;
+    private readonly int cellSizeInPixels;
+    private readonly int gameFieldHeightInCells = 9;
+    private readonly int gameFieldWidthInCells = 9;
+
+    public MainForm()
     {
-        private Game game;
-        private int gameFieldWidthInCells = 9;
-        private int gameFieldHeightInCells = 9;
-        private int cellWidthInPixels;
-        private int cellHeightInPixels;
+        InitializeComponent();
 
-        public MainForm()
+        int cellWidthInPixels = pictureGameField.Width / gameFieldWidthInCells;
+        int cellHeightInPixels = pictureGameField.Height / gameFieldHeightInCells;
+
+        cellSizeInPixels = cellWidthInPixels >= cellHeightInPixels 
+            ? cellHeightInPixels 
+            : cellWidthInPixels;
+
+        game = new Game(gameFieldWidthInCells, gameFieldHeightInCells, cellSizeInPixels);
+
+        timer.Stop();
+
+        game.Defeat += ShowDefeatMessage;
+        game.Victory += ShowVictoryMessage;
+    }
+
+    private void pictureGameField_Paint(object sender, PaintEventArgs e)
+    {
+        game.DrawGameField(e.Graphics);
+
+        labelTimer.Text = TimeSpan.FromSeconds(game.ElapsedSeconds).ToString();
+    }
+
+    private void pictureGameField_MouseMove(object sender, MouseEventArgs e)
+    {
+        int x = e.X / cellSizeInPixels;
+        int y = e.Y / cellSizeInPixels;
+
+        if (x >= 0 && x < gameFieldWidthInCells &&
+            y >= 0 && y < gameFieldHeightInCells)
         {
-            InitializeComponent();
+            bool isSelectedCellChanged = false;
+            game.SelectCell(x, y, out isSelectedCellChanged);
 
-            cellWidthInPixels = pictureGameField.Width / gameFieldWidthInCells;
-            cellHeightInPixels = pictureGameField.Height / gameFieldHeightInCells;
-
-            game = new Game(gameFieldWidthInCells, gameFieldHeightInCells, cellWidthInPixels, cellHeightInPixels);
-
-            timer.Stop();
-
-            game.Defeat += ShowDefeatMessage;
-            game.Victory += ShowVictoryMessage;
-
+            if (isSelectedCellChanged)
+                pictureGameField.Refresh();
         }
+    }
 
-        private void pictureGameField_Paint(object sender, PaintEventArgs e)
-        {
-            game.DrawGameField(e.Graphics);
-
-            labelTimer.Text = TimeSpan.FromSeconds(game.ElapsedSeconds).ToString();
-        }
-
-        private void pictureGameField_MouseMove(object sender, MouseEventArgs e)
-        {
-            int x = e.X / cellWidthInPixels;
-            int y = e.Y / cellHeightInPixels;
-
-            if (x >= 0 && x < gameFieldWidthInCells &&
-                y >= 0 && y < gameFieldHeightInCells)
-            {
-                bool isSelectedCellChanged=false;
-                game.SelectCell(x, y, out isSelectedCellChanged);
-                
-                if(isSelectedCellChanged) 
-                    pictureGameField.Refresh();
-            }
-
-        }
-
-        private void timer_Tick(object sender, EventArgs e)
-        {
-            game.ElapsedSeconds++;
-            labelTimer.Text = TimeSpan.FromSeconds(game.ElapsedSeconds).ToString();
-            pictureGameField.Refresh();
-        }
+    private void timer_Tick(object sender, EventArgs e)
+    {
+        game.ElapsedSeconds++;
+        labelTimer.Text = TimeSpan.FromSeconds(game.ElapsedSeconds).ToString();
+    }
 
 
-        private void pictureGameField_Click(object sender, EventArgs e)
-        {
-            pictureGameField.Refresh();
-        }
+    private void pictureGameField_Click(object sender, EventArgs e)
+    {
+        pictureGameField.Refresh();
+    }
 
-        private void pictureGameField_MouseClick(object sender, MouseEventArgs e)
-        {
-            timer.Start();
+    private void pictureGameField_MouseClick(object sender, MouseEventArgs e)
+    {
+        timer.Start();
 
-            if (e.Button == MouseButtons.Left)
-                game.TryOpenSelectedCell();
+        int x = e.X / cellSizeInPixels;
+        int y = e.Y / cellSizeInPixels;
 
-            if (e.Button == MouseButtons.Right)
-                game.MarkCell();
+        if (x < 0 || x >= gameFieldWidthInCells &&
+            y < 0 || y >= gameFieldHeightInCells)
+            return;
 
-            if (e.Button == MouseButtons.Middle)
-                game.SmartClick();
+        if (e.Button == MouseButtons.Left)
+            game.TryOpenSelectedCell(x,y);
 
-            labelMinesCount.Text = game.MinesCount.ToString();
+        if (e.Button == MouseButtons.Right)
+            game.MarkCell(x,y);
 
-            pictureGameField.Refresh();
-        }
+        if (e.Button == MouseButtons.Middle)
+            game.SmartClick(x,y);
 
-        private void buttonRestart_Click(object sender, EventArgs e)
-        {
-            timer.Stop();
-            game.PrepareToStart();
-            pictureGameField.Refresh();
-        }
+        labelMinesCount.Text = game.RemainingUnmarkedMines.ToString();
 
-        private void ShowDefeatMessage(object? sender, EventArgs e)
-        {
-            timer.Stop();
-            pictureGameField.Refresh();
-            DialogResult result = MessageBox.Show("You LOSE!", "Defeat", MessageBoxButtons.OK);
-        }
+        pictureGameField.Refresh();
+    }
 
-        private void ShowVictoryMessage(object? sender, EventArgs e)
-        {
-            timer.Stop();
-            pictureGameField.Refresh();
-            DialogResult result = MessageBox.Show("You Win!", "Victory", MessageBoxButtons.OK);
-        }
+    private void buttonRestart_Click(object sender, EventArgs e)
+    {
+        timer.Stop();
+        game.PrepareToStart();
+        pictureGameField.Refresh();
+    }
+
+    private void ShowDefeatMessage(object? sender, EventArgs e)
+    {
+        timer.Stop();
+        pictureGameField.Refresh();
+        DialogResult result = MessageBox.Show("You LOSE!", "Defeat", MessageBoxButtons.OK);
+    }
+
+    private void ShowVictoryMessage(object? sender, EventArgs e)
+    {
+        timer.Stop();
+        pictureGameField.Refresh();
+        DialogResult result = MessageBox.Show("You Win!", "Victory", MessageBoxButtons.OK);
     }
 }
