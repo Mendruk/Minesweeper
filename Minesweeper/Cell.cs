@@ -24,9 +24,6 @@ public class Cell
     private static readonly Bitmap flagSprite = Resource.FlagSprite;
     private static readonly Bitmap crossSprite = Resource.CrossSprite;
 
-    public static int CellWidthInPixels;
-    public static int CellHeightInPixels;
-
     private readonly Rectangle cellRectangle;
 
     public bool IsCross;
@@ -35,7 +32,7 @@ public class Cell
     public bool IsOpen;
     public int Number;
 
-    public Cell(int x, int y)
+    public Cell(int x, int y, int widthInPixels, int heightInPixels)
     {
         format.Alignment = StringAlignment.Center;
 
@@ -44,10 +41,7 @@ public class Cell
         X = x;
         Y = y;
 
-        int cellXInPixels = x * CellWidthInPixels;
-        int cellYInPixels = y * CellHeightInPixels;
-
-        cellRectangle = new Rectangle(cellXInPixels, cellYInPixels, CellHeightInPixels, CellWidthInPixels);
+        cellRectangle = new Rectangle(x * widthInPixels, y * heightInPixels, widthInPixels, heightInPixels);
     }
 
     public int X { get; }
@@ -64,10 +58,10 @@ public class Cell
 
     public void DrawCell(Graphics graphics)
     {
-        if (brushes.TryGetValue(Number, out Brush? brush) && !IsMine)
+        if (brushes.TryGetValue(Number, out Brush? brush) && !IsMine && IsOpen)
             graphics.DrawString(Number.ToString(), cellFont, brush, cellRectangle, format);
 
-        if (IsMine)
+        if (IsMine && IsOpen)
             graphics.DrawImage(mineSprite, cellRectangle);
 
         if (!IsOpen)

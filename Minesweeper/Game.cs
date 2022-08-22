@@ -3,26 +3,25 @@
 public class Game
 {
     private static readonly Random random = new();
-
+    private int widthInCells;
+    private int heightInCells;
     private readonly Cell[,] cells; //[x,y]
     private Cell selectedCell;
-    private readonly int heightInCells = 9;
-    private readonly int widthInCells = 9;
     private bool isStarted;
     private int minesNumber;
 
-    public int Time;
+    public int ElapsedSeconds;
 
-    public Game(int widthInPixels, int heightInPixels)
+    public Game(int gameFieldWidthInCells, int gameFieldHeightInCells, int cellWidthInPixels, int cellHeightInPixels)
     {
-        Cell.CellWidthInPixels = widthInPixels / widthInCells;
-        Cell.CellHeightInPixels = heightInPixels / heightInCells;
+        this.widthInCells = gameFieldWidthInCells;
+        this.heightInCells = gameFieldHeightInCells;
 
         cells = new Cell[widthInCells, heightInCells];
 
         for (int x = 0; x < widthInCells; x++)
             for (int y = 0; y < heightInCells; y++)
-                cells[x, y] = new Cell(x, y);
+                cells[x, y] = new Cell(x, y, cellWidthInPixels, cellHeightInPixels);
 
         selectedCell = cells[0, 0];
 
@@ -34,22 +33,16 @@ public class Game
     public event EventHandler Victory = delegate { };
     public event EventHandler Defeat = delegate { };
 
-    public event EventHandler StopTimer = delegate { };
-    public event EventHandler StartTimer = delegate { };
-
-    public event EventHandler ChangeSelectedCell = delegate { };
-
-    public void SelectCell(int mouseX, int mouseY)
+    public void SelectCell(int x, int y, out bool isSelectedCellChanged)
     {
-        int x = mouseX / Cell.CellWidthInPixels;
-        int y = mouseY / Cell.CellHeightInPixels;
-
-        if (x >= 0 && x < widthInCells &&
-            y >= 0 && y < heightInCells &&
-            selectedCell != cells[x, y])
+        if (selectedCell != cells[x, y])
         {
             selectedCell = cells[x, y];
-            ChangeSelectedCell(this, EventArgs.Empty);
+            isSelectedCellChanged = true;
+        }
+        else
+        {
+            isSelectedCellChanged = true;
         }
     }
 
@@ -58,7 +51,7 @@ public class Game
         isStarted = false;
         MinesCount = 10;
         minesNumber = MinesCount;
-        Time = 0;
+        ElapsedSeconds = 0;
 
         foreach (Cell cell in cells)
             cell.ClearCell();
@@ -68,8 +61,6 @@ public class Game
     {
         for (int i = 0; i < minesNumber; i++)
             PlantNextMineExceptSelectedCell(x, y);
-
-        StartTimer(this, EventArgs.Empty);
     }
 
     public void DrawGameField(Graphics graphics)
@@ -82,8 +73,8 @@ public class Game
     }
     public bool TryOpenSelectedCell()
     {
-        int x=selectedCell.X;
-        int y=selectedCell.Y;
+        int x = selectedCell.X;
+        int y = selectedCell.Y;
 
         return TryOpenSelectedCell(x, y);
     }
@@ -101,16 +92,12 @@ public class Game
             isStarted = true;
         }
 
-        if (cells[x, y].IsMarked &&
-            x >= 0 && x < widthInCells &&
-            y >= 0 && y < heightInCells)
+        if (cells[x, y].IsMarked)
             return false;
 
         if (cells[x, y].IsMine)//Defeat
         {
             OpenCellsWithMine();
-
-            StopTimer(this, EventArgs.Empty);
 
             Defeat(this, EventArgs.Empty);
 
@@ -124,8 +111,6 @@ public class Game
         if (CheckForVictory())
         {
             OpenCellsWithMine();
-
-            StopTimer(this, EventArgs.Empty);
 
             Victory(this, EventArgs.Empty);
 
@@ -203,6 +188,9 @@ public class Game
         int x = selectedCell.X;
         int y = selectedCell.Y;
 
+        if (cells[x, y].IsMarked)
+            return;
+
         int flagNumber = 0;
 
         ActionAroundCell(x, y, (x, y) =>
@@ -226,6 +214,8 @@ public class Game
             {
                 if (TryOpenSelectedCell(cell))
                     cell.IsOpen = true;
+                else
+                    return;
             }
         }
     }
