@@ -5,17 +5,18 @@ public class Game
     private static readonly Random random = new();
     private int widthInCells;
     private int heightInCells;
+    private int totalMines;
     private readonly Cell[,] cells; //[x,y]
-    private Cell highlightCell;
+    private Cell selectedCell;
     private bool isStarted;
-    private int totalMine;
 
     public int ElapsedSeconds;
 
-    public Game(int gameFieldWidthInCells, int gameFieldHeightInCells, int cellSizeInPixels)
+    public Game(int gameFieldWidthInCells, int gameFieldHeightInCells, int cellSizeInPixels, int totalMines)
     {
-        this.widthInCells = gameFieldWidthInCells;
-        this.heightInCells = gameFieldHeightInCells;
+        widthInCells = gameFieldWidthInCells;
+        heightInCells = gameFieldHeightInCells;
+        this.totalMines = totalMines;
 
         cells = new Cell[widthInCells, heightInCells];
 
@@ -23,7 +24,7 @@ public class Game
             for (int y = 0; y < heightInCells; y++)
                 cells[x, y] = new Cell(x, y, cellSizeInPixels);
 
-        highlightCell = cells[0, 0];
+        selectedCell = null;
 
         PrepareToStart();
     }
@@ -35,22 +36,21 @@ public class Game
 
     public void SelectCell(int x, int y, out bool isSelectedCellChanged)
     {
-        if (highlightCell != cells[x, y])
+        if (selectedCell != cells[x, y])
         {
-            highlightCell = cells[x, y];
+            selectedCell = cells[x, y];
             isSelectedCellChanged = true;
         }
         else
         {
-            isSelectedCellChanged = true;
+            isSelectedCellChanged = false;
         }
     }
 
     public void PrepareToStart()
     {
         isStarted = false;
-        RemainingUnmarkedMines = 10;
-        totalMine = RemainingUnmarkedMines;
+        RemainingUnmarkedMines = totalMines;
         ElapsedSeconds = 0;
 
         foreach (Cell cell in cells)
@@ -59,8 +59,8 @@ public class Game
 
     private void Start(int x, int y)
     {
-        for (int i = 0; i < totalMine; i++)
-            PlantNextMineExceptSelectedCell(x, y);
+        for (int i = 0; i < totalMines; i++)
+            PlantNextMineExceptCell(x, y);
     }
 
     public void DrawGameField(Graphics graphics)
@@ -68,11 +68,11 @@ public class Game
         foreach (Cell cell in cells)
             cell.DrawCell(graphics);
 
-        if (highlightCell != null)
-            highlightCell.DrawBackLighting(graphics);
+        if (selectedCell != null)
+            selectedCell.DrawSelectedCell(graphics);
     }
 
-    public bool TryOpenSelectedCell(int x, int y)
+    public bool TryOpenCell(int x, int y)
     {
         if (!isStarted)
         {
@@ -118,7 +118,7 @@ public class Game
             if (cell.IsOpen)
                 openedCellCount++;
 
-        if (cells.Length - openedCellCount == totalMine)
+        if (cells.Length - openedCellCount == totalMines)
             return true;
 
         return false;
@@ -144,7 +144,7 @@ public class Game
             if (cell.Number != 0)
                 continue;
 
-            foreach (Cell cellToEnqueue in ActionAroundCell(cell))
+            foreach (Cell cellToEnqueue in EnumerateAdjacentCells(cell))
             {
                 if (!cellToEnqueue.IsOpen &&
                     !cellToEnqueue.IsMined &&
@@ -156,48 +156,52 @@ public class Game
 
     public void MarkCell(int x, int y)
     {
-        if (cells[x, y].IsMarked)
+        Cell cellToMark = cells[x, y];
+
+        if (cellToMark.IsMarked)
         {
-            cells[x, y].IsMarked = false;
+            cellToMark.IsMarked = false;
             RemainingUnmarkedMines++;
         }
-        else if (RemainingUnmarkedMines > 0 && !cells[x, y].IsOpen)
+        else if (RemainingUnmarkedMines > 0 && !cellToMark.IsOpen)
         {
-            cells[x, y].IsMarked = true;
+            cellToMark.IsMarked = true;
             RemainingUnmarkedMines--;
         }
     }
 
     public void SmartClick(int x, int y)
     {
-        if (cells[x, y].IsMarked || !cells[x, y].IsOpen || !isStarted)
+        Cell clickedCell = cells[x, y];
+
+        if (clickedCell.IsMarked || !clickedCell.IsOpen || !isStarted)
             return;
 
         int flagNumber = 0;
 
-        foreach (Cell cell in ActionAroundCell(cells[x, y]))
+        foreach (Cell cell in EnumerateAdjacentCells(clickedCell))
         {
             if (cell.IsMarked)
                 flagNumber++;
         }
 
-        if (cells[x, y].Number != flagNumber)
+        if (clickedCell.Number != flagNumber)
             return;
 
-        foreach (Cell cell in ActionAroundCell(cells[x, y]))
+        foreach (Cell cell in EnumerateAdjacentCells(clickedCell))
         {
             if (cell.IsOpen ||
                 cell.IsMarked)
                 continue;
 
-            if (!TryOpenSelectedCell(cell.X, cell.Y))
+            if (!TryOpenCell(cell.X, cell.Y))
                 return;
         }
     }
 
     private void DefineCellNumberAroundCell(int x, int y)
     {
-        foreach (Cell cell in ActionAroundCell(cells[x, y]))
+        foreach (Cell cell in EnumerateAdjacentCells(cells[x, y]))
         {
             cell.Number++;
         }
@@ -214,23 +218,24 @@ public class Game
         }
     }
 
-    private void PlantNextMineExceptSelectedCell(int x, int y)
+    private void PlantNextMineExceptCell(int x, int y)
     {
         int randomX = random.Next(widthInCells);
         int randomY = random.Next(heightInCells);
+        Cell randomCell = cells[randomX, randomY];
 
-        if (cells[randomX, randomY].IsMined == false && cells[x, y] != cells[randomX, randomY])
+        if (randomCell.IsMined == false && cells[x, y] != randomCell)
         {
-            cells[randomX, randomY].IsMined = true;
+            randomCell.IsMined = true;
             DefineCellNumberAroundCell(randomX, randomY);
         }
         else
         {
-            PlantNextMineExceptSelectedCell(x, y);
+            PlantNextMineExceptCell(x, y);
         }
     }
 
-    private IEnumerable<Cell> ActionAroundCell(Cell cell)
+    private IEnumerable<Cell> EnumerateAdjacentCells(Cell cell)
     {
         for (int dx = -1; dx <= 1; dx++)
             for (int dy = -1; dy <= 1; dy++)

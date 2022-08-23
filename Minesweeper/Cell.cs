@@ -21,7 +21,7 @@ public class Cell
     private static readonly Bitmap closedCellSprite = Resource.ClosedCellSprite;
     private static readonly Bitmap selectedCellSprite = Resource.SelectedCellSprite;
     private static readonly Bitmap mineSprite = Resource.MineSprite;
-    private static readonly Bitmap flagSprite = Resource.FlagSprite;
+    private static readonly Bitmap MarkSprite = Resource.MarkSprite;
     private static readonly Bitmap crossSprite = Resource.CrossSprite;
 
     private readonly Rectangle cellRectangle;
@@ -70,13 +70,13 @@ public class Cell
             graphics.DrawRectangle(Pens.Black, cellRectangle);
 
         if (IsMarked)
-            graphics.DrawImage(flagSprite, cellRectangle);
+            graphics.DrawImage(MarkSprite, cellRectangle);
 
         if (IsIncorrectlyMarked)
             graphics.DrawImage(crossSprite, cellRectangle);
     }
 
-    public void DrawBackLighting(Graphics graphics)
+    public void DrawSelectedCell(Graphics graphics)
     {
         if (!IsOpen && !IsMarked)
             graphics.DrawImage(selectedCellSprite, cellRectangle);

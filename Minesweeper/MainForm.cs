@@ -2,28 +2,27 @@ namespace Minesweeper;
 
 public partial class MainForm : Form
 {    
-    private readonly Game game;
+    private const int GameFieldHeightInCells = 9;
+    private const int GameFieldWidthInCells = 9;
+    private const int TotalMine = 10;
     private readonly int cellSizeInPixels;
-    private readonly int gameFieldHeightInCells = 9;
-    private readonly int gameFieldWidthInCells = 9;
+    private readonly Game game;
 
     public MainForm()
     {
         InitializeComponent();
 
-        int cellWidthInPixels = pictureGameField.Width / gameFieldWidthInCells;
-        int cellHeightInPixels = pictureGameField.Height / gameFieldHeightInCells;
+        int cellWidthInPixels = pictureGameField.Width / GameFieldWidthInCells;
+        int cellHeightInPixels = pictureGameField.Height / GameFieldHeightInCells;
 
-        cellSizeInPixels = cellWidthInPixels >= cellHeightInPixels 
-            ? cellHeightInPixels 
-            : cellWidthInPixels;
+        cellSizeInPixels = Math.Min(cellWidthInPixels, cellHeightInPixels);
 
-        game = new Game(gameFieldWidthInCells, gameFieldHeightInCells, cellSizeInPixels);
+        game = new Game(GameFieldWidthInCells, GameFieldHeightInCells, cellSizeInPixels, TotalMine);
 
         timer.Stop();
 
-        game.Defeat += ShowDefeatMessage;
-        game.Victory += ShowVictoryMessage;
+        game.Defeat += OnDefeat;
+        game.Victory += OnVictory;
     }
 
     private void pictureGameField_Paint(object sender, PaintEventArgs e)
@@ -41,23 +40,16 @@ public partial class MainForm : Form
         if(IsCellOutsideGameField(x,y))
             return;
 
-        bool isSelectedCellChanged = false;
-            game.SelectCell(x, y, out isSelectedCellChanged);
+        game.SelectCell(x, y, out bool isSelectedCellChanged);
 
-            if (isSelectedCellChanged)
-                pictureGameField.Refresh();
+        if (isSelectedCellChanged)
+            pictureGameField.Refresh();
     }
 
     private void timer_Tick(object sender, EventArgs e)
     {
         game.ElapsedSeconds++;
         labelTimer.Text = TimeSpan.FromSeconds(game.ElapsedSeconds).ToString();
-    }
-
-
-    private void pictureGameField_Click(object sender, EventArgs e)
-    {
-        pictureGameField.Refresh();
     }
 
     private void pictureGameField_MouseClick(object sender, MouseEventArgs e)
@@ -86,11 +78,8 @@ public partial class MainForm : Form
 
     private bool IsCellOutsideGameField(int x, int y)
     {
-        if (x < 0 || x >= gameFieldWidthInCells ||
-            y < 0 || y >= gameFieldHeightInCells)
-            return true;
-
-        return false;
+        return (x < 0 || x >= GameFieldWidthInCells ||
+                y < 0 || y >= GameFieldHeightInCells);
     }
     private void buttonRestart_Click(object sender, EventArgs e)
     {
@@ -99,17 +88,17 @@ public partial class MainForm : Form
         pictureGameField.Refresh();
     }
 
-    private void ShowDefeatMessage(object? sender, EventArgs e)
+    private void OnDefeat(object? sender, EventArgs e)
     {
         timer.Stop();
         pictureGameField.Refresh();
-        DialogResult result = MessageBox.Show("You LOSE!", "Defeat", MessageBoxButtons.OK);
+        MessageBox.Show("You LOSE!", "Defeat");
     }
 
-    private void ShowVictoryMessage(object? sender, EventArgs e)
+    private void OnVictory(object? sender, EventArgs e)
     {
         timer.Stop();
         pictureGameField.Refresh();
-        DialogResult result = MessageBox.Show("You Win!", "Victory", MessageBoxButtons.OK);
+        MessageBox.Show("You Win!", "Victory");
     }
 }

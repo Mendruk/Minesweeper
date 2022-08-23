@@ -8,12 +8,13 @@ internal class MinesweeperTests
     private readonly int width = 10;
     private readonly int height = 10;
     private readonly int cellSize = 1;
+    private readonly int totalMine = 10;
     private Game game;
 
     [SetUp]
     public void BeforeEachTests()
     {
-        game = new(width, height, cellSize);
+        game = new(width, height, cellSize, totalMine);
     }
 
     [Test]

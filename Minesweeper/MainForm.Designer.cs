@@ -43,10 +43,9 @@
             this.pictureGameField.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.pictureGameField.Location = new System.Drawing.Point(12, 12);
             this.pictureGameField.Name = "pictureGameField";
-            this.pictureGameField.Size = new System.Drawing.Size(400, 400);
+            this.pictureGameField.Size = new System.Drawing.Size(451, 451);
             this.pictureGameField.TabIndex = 0;
             this.pictureGameField.TabStop = false;
-            this.pictureGameField.Click += new System.EventHandler(this.pictureGameField_Click);
             this.pictureGameField.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureGameField_Paint);
             this.pictureGameField.MouseClick += new System.Windows.Forms.MouseEventHandler(this.pictureGameField_MouseClick);
             this.pictureGameField.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureGameField_MouseMove);
@@ -54,7 +53,7 @@
             // labelMinesText
             // 
             this.labelMinesText.AutoSize = true;
-            this.labelMinesText.Location = new System.Drawing.Point(418, 82);
+            this.labelMinesText.Location = new System.Drawing.Point(12, 485);
             this.labelMinesText.Name = "labelMinesText";
             this.labelMinesText.Size = new System.Drawing.Size(54, 20);
             this.labelMinesText.TabIndex = 1;
@@ -63,7 +62,7 @@
             // labelMinesCount
             // 
             this.labelMinesCount.AutoSize = true;
-            this.labelMinesCount.Location = new System.Drawing.Point(478, 82);
+            this.labelMinesCount.Location = new System.Drawing.Point(72, 485);
             this.labelMinesCount.Name = "labelMinesCount";
             this.labelMinesCount.Size = new System.Drawing.Size(25, 20);
             this.labelMinesCount.TabIndex = 2;
@@ -72,15 +71,15 @@
             // labelTimer
             // 
             this.labelTimer.AutoSize = true;
-            this.labelTimer.Location = new System.Drawing.Point(422, 148);
+            this.labelTimer.Location = new System.Drawing.Point(399, 485);
             this.labelTimer.Name = "labelTimer";
-            this.labelTimer.Size = new System.Drawing.Size(55, 20);
+            this.labelTimer.Size = new System.Drawing.Size(63, 20);
             this.labelTimer.TabIndex = 3;
-            this.labelTimer.Text = "0:00:00";
+            this.labelTimer.Text = "00:00:00";
             // 
             // buttonRestart
             // 
-            this.buttonRestart.Location = new System.Drawing.Point(445, 383);
+            this.buttonRestart.Location = new System.Drawing.Point(185, 481);
             this.buttonRestart.Name = "buttonRestart";
             this.buttonRestart.Size = new System.Drawing.Size(94, 29);
             this.buttonRestart.TabIndex = 4;
@@ -98,7 +97,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(579, 424);
+            this.ClientSize = new System.Drawing.Size(474, 524);
             this.Controls.Add(this.buttonRestart);
             this.Controls.Add(this.labelTimer);
             this.Controls.Add(this.labelMinesCount);
