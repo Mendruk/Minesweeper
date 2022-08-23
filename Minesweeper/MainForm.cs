@@ -38,15 +38,14 @@ public partial class MainForm : Form
         int x = e.X / cellSizeInPixels;
         int y = e.Y / cellSizeInPixels;
 
-        if (x >= 0 && x < gameFieldWidthInCells &&
-            y >= 0 && y < gameFieldHeightInCells)
-        {
-            bool isSelectedCellChanged = false;
+        if(IsCellOutsideGameField(x,y))
+            return;
+
+        bool isSelectedCellChanged = false;
             game.SelectCell(x, y, out isSelectedCellChanged);
 
             if (isSelectedCellChanged)
                 pictureGameField.Refresh();
-        }
     }
 
     private void timer_Tick(object sender, EventArgs e)
@@ -68,8 +67,7 @@ public partial class MainForm : Form
         int x = e.X / cellSizeInPixels;
         int y = e.Y / cellSizeInPixels;
 
-        if (x < 0 || x >= gameFieldWidthInCells &&
-            y < 0 || y >= gameFieldHeightInCells)
+        if (IsCellOutsideGameField(x, y))
             return;
 
         if (e.Button == MouseButtons.Left)
@@ -86,6 +84,14 @@ public partial class MainForm : Form
         pictureGameField.Refresh();
     }
 
+    private bool IsCellOutsideGameField(int x, int y)
+    {
+        if (x < 0 || x >= gameFieldWidthInCells ||
+            y < 0 || y >= gameFieldHeightInCells)
+            return true;
+
+        return false;
+    }
     private void buttonRestart_Click(object sender, EventArgs e)
     {
         timer.Stop();
