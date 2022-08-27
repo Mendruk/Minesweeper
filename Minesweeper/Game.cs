@@ -3,12 +3,12 @@
 public class Game
 {
     private static readonly Random random = new();
-    private int widthInCells;
-    private int heightInCells;
-    private int totalMines;
+    private readonly int widthInCells;
+    private readonly int heightInCells;
+    private readonly int totalMines;
     private readonly Cell[,] cells; //[x,y]
     private Cell selectedCell;
-    private bool isStarted;
+    private bool areMinesPlanted;
 
     public int ElapsedSeconds;
 
@@ -25,8 +25,7 @@ public class Game
                 cells[x, y] = new Cell(x, y, cellSizeInPixels);
 
         selectedCell = null;
-
-        PrepareToStart();
+        Restart();
     }
 
     public int RemainingUnmarkedMines { get; private set; }
@@ -47,9 +46,9 @@ public class Game
         }
     }
 
-    public void PrepareToStart()
+    public void Restart()
     {
-        isStarted = false;
+        areMinesPlanted = false;
         RemainingUnmarkedMines = totalMines;
         ElapsedSeconds = 0;
 
@@ -57,10 +56,12 @@ public class Game
             cell.ClearCell();
     }
 
-    private void Start(int x, int y)
+    private void PlantMines(int x, int y)
     {
         for (int i = 0; i < totalMines; i++)
             PlantNextMineExceptCell(x, y);
+
+        areMinesPlanted = true;
     }
 
     public void DrawGameField(Graphics graphics)
@@ -74,13 +75,10 @@ public class Game
 
     public bool TryOpenCell(int x, int y)
     {
-        if (!isStarted)
-        {
-            Start(x, y);
-            isStarted = true;
-        }
+        if (!areMinesPlanted)
+            PlantMines(x, y);
 
-        if (cells[x, y].IsMarked)
+        if (cells[x, y].CellState == CellState.Marked)
             return false;
 
         if (cells[x, y].IsMined)//Defeat
@@ -89,20 +87,19 @@ public class Game
 
             Defeat(this, EventArgs.Empty);
 
-            PrepareToStart();
-
             return false;
         }
 
-        OpenOtherCells(x, y);
+        cells[x, y].CellState = CellState.Opened;
+
+        if (cells[x, y].Number == 0)
+            OpenConnectedZeroArea(x, y);
 
         if (AreVictoryConditionsMet())
         {
             OpenCellsWithMine();
 
             Victory(this, EventArgs.Empty);
-
-            PrepareToStart();
 
             return false;
         }
@@ -112,26 +109,15 @@ public class Game
 
     private bool AreVictoryConditionsMet()
     {
-        int openedCellCount = 0;
+        int closedCellCount = cells
+            .OfType<Cell>()
+            .Count(cell => (cell.CellState != CellState.Opened));
 
-        foreach (Cell cell in cells)
-            if (cell.IsOpen)
-                openedCellCount++;
-
-        if (cells.Length - openedCellCount == totalMines)
-            return true;
-
-        return false;
+        return closedCellCount == totalMines;
     }
 
-    private void OpenOtherCells(int x, int y)
+    private void OpenConnectedZeroArea(int x, int y)
     {
-        if (cells[x, y].Number != 0)
-        {
-            cells[x, y].IsOpen = true;
-            return;
-        }
-
         Queue<Cell> cellsQueue = new();
         cellsQueue.Enqueue(cells[x, y]);
 
@@ -139,16 +125,15 @@ public class Game
         {
             Cell cell = cellsQueue.Dequeue();
 
-            cell.IsOpen = true;
+            cell.CellState = CellState.Opened;
 
             if (cell.Number != 0)
                 continue;
 
             foreach (Cell cellToEnqueue in EnumerateAdjacentCells(cell))
             {
-                if (!cellToEnqueue.IsOpen &&
-                    !cellToEnqueue.IsMined &&
-                    !cellToEnqueue.IsMarked)
+                if (cellToEnqueue.CellState==CellState.Closed&&
+                    !cellToEnqueue.IsMined )
                     cellsQueue.Enqueue(cellToEnqueue);
             }
         }
@@ -158,14 +143,14 @@ public class Game
     {
         Cell cellToMark = cells[x, y];
 
-        if (cellToMark.IsMarked)
+        if (cellToMark.CellState==CellState.Marked)
         {
-            cellToMark.IsMarked = false;
+            cellToMark.CellState=CellState.Closed;
             RemainingUnmarkedMines++;
         }
-        else if (RemainingUnmarkedMines > 0 && !cellToMark.IsOpen)
+        else if (RemainingUnmarkedMines > 0 && cellToMark.CellState == CellState.Closed)
         {
-            cellToMark.IsMarked = true;
+            cellToMark.CellState = CellState.Marked;
             RemainingUnmarkedMines--;
         }
     }
@@ -174,24 +159,20 @@ public class Game
     {
         Cell clickedCell = cells[x, y];
 
-        if (clickedCell.IsMarked || !clickedCell.IsOpen || !isStarted)
+        if (clickedCell.CellState == CellState.Marked ||
+            clickedCell.CellState == CellState.Closed || 
+            !areMinesPlanted)
             return;
 
-        int flagNumber = 0;
+        int marksCount = EnumerateAdjacentCells(clickedCell).Count(cell => cell.CellState==CellState.Marked);
 
-        foreach (Cell cell in EnumerateAdjacentCells(clickedCell))
-        {
-            if (cell.IsMarked)
-                flagNumber++;
-        }
-
-        if (clickedCell.Number != flagNumber)
+        if (clickedCell.Number != marksCount)
             return;
 
         foreach (Cell cell in EnumerateAdjacentCells(clickedCell))
         {
-            if (cell.IsOpen ||
-                cell.IsMarked)
+            if (cell.CellState == CellState.Opened ||
+                cell.CellState == CellState.Marked)
                 continue;
 
             if (!TryOpenCell(cell.X, cell.Y))
@@ -206,15 +187,16 @@ public class Game
             cell.Number++;
         }
     }
-
+    
+    //todo
     private void OpenCellsWithMine()
     {
         foreach (Cell cell in cells)
         {
-            if (!cell.IsMined && cell.IsMarked)
-                cell.IsIncorrectlyMarked = true;
-            if (cell.IsMined && !cell.IsMarked)
-                cell.IsOpen = true;
+            if (!cell.IsMined && cell.CellState==CellState.Marked)
+                cell.CellState= CellState.IncorrectMarket;
+            if (cell.IsMined && cell.CellState != CellState.Marked)
+                cell.CellState = CellState.Opened;
         }
     }
 

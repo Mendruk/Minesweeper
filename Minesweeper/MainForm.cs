@@ -63,7 +63,7 @@ public partial class MainForm : Form
             return;
 
         if (e.Button == MouseButtons.Left)
-            game.TryOpenSelectedCell(x,y);
+            game.TryOpenCell(x,y);
 
         if (e.Button == MouseButtons.Right)
             game.MarkCell(x,y);
@@ -84,7 +84,7 @@ public partial class MainForm : Form
     private void buttonRestart_Click(object sender, EventArgs e)
     {
         timer.Stop();
-        game.PrepareToStart();
+        game.Restart();
         pictureGameField.Refresh();
     }
 
@@ -93,6 +93,7 @@ public partial class MainForm : Form
         timer.Stop();
         pictureGameField.Refresh();
         MessageBox.Show("You LOSE!", "Defeat");
+        game.Restart();
     }
 
     private void OnVictory(object? sender, EventArgs e)
@@ -100,5 +101,6 @@ public partial class MainForm : Form
         timer.Stop();
         pictureGameField.Refresh();
         MessageBox.Show("You Win!", "Victory");
+        game.Restart();
     }
 }

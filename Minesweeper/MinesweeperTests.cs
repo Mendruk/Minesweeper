@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 
 namespace Minesweeper;
-
+//TODO
 [TestFixture]
 internal class MinesweeperTests
 {
@@ -18,11 +18,11 @@ internal class MinesweeperTests
     }
 
     [Test]
-    public void TestMinesCount()
+    public void TestRemainingUnmarkedMines()
     {
         int expectedResult = game.RemainingUnmarkedMines;
 
-        Assert.That(expectedResult, Is.EqualTo(10));
+        Assert.That(expectedResult, Is.EqualTo(totalMine));
     }
 
     [Test]
@@ -31,7 +31,7 @@ internal class MinesweeperTests
         game.MarkCell(1, 1);
         int expectedResult = game.RemainingUnmarkedMines;
 
-        Assert.That(expectedResult, Is.EqualTo(9));
+        Assert.That(expectedResult, Is.EqualTo(totalMine-1));
     }
 
     [Test]
@@ -41,14 +41,32 @@ internal class MinesweeperTests
         game.MarkCell(1, 1);
         int expectedResult = game.RemainingUnmarkedMines;
 
-        Assert.That(expectedResult, Is.EqualTo(10));
+        Assert.That(expectedResult, Is.EqualTo(totalMine));
     }
 
     [Test]
-    public void TestTryOpenSelectedCellWithFlag()
+    public void TestOpenCellWithMark()
     {
         game.MarkCell(1, 1);
-        bool expectedResult = game.TryOpenSelectedCell(1, 1);
+        bool expectedResult = game.TryOpenCell(1, 1);
+
+        Assert.That(expectedResult, Is.EqualTo(false));
+    }
+
+    [Test]
+    public void TestSelectCell()
+    {
+        game.SelectCell(1,1, out bool expectedResult);
+
+        Assert.That(expectedResult, Is.EqualTo(true));
+    }
+
+    [Test]
+    public void TestSelectSelectedCell()
+    {
+        game.SelectCell(1, 1, out bool isSelectedCellChanged);
+
+        game.SelectCell(1, 1, out bool expectedResult);
 
         Assert.That(expectedResult, Is.EqualTo(false));
     }

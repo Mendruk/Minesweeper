@@ -21,15 +21,13 @@ public class Cell
     private static readonly Bitmap closedCellSprite = Resource.ClosedCellSprite;
     private static readonly Bitmap selectedCellSprite = Resource.SelectedCellSprite;
     private static readonly Bitmap mineSprite = Resource.MineSprite;
-    private static readonly Bitmap MarkSprite = Resource.MarkSprite;
+    private static readonly Bitmap markSprite = Resource.MarkSprite;
     private static readonly Bitmap crossSprite = Resource.CrossSprite;
 
     private readonly Rectangle cellRectangle;
 
-    public bool IsIncorrectlyMarked;
-    public bool IsMarked;
+    public CellState CellState;
     public bool IsMined;
-    public bool IsOpen;
     public int Number;
 
     public Cell(int x, int y, int cellSizeInPixels)
@@ -49,36 +47,43 @@ public class Cell
 
     public void ClearCell()
     {
-        IsOpen = false;
-        IsMarked = false;
+        CellState = CellState.Closed;
         IsMined = false;
-        IsIncorrectlyMarked = false;
         Number = 0;
     }
 
     public void DrawCell(Graphics graphics)
     {
-        if (brushes.TryGetValue(Number, out Brush? brush) && !IsMined && IsOpen)
-            graphics.DrawString(Number.ToString(), cellFont, brush, cellRectangle, format);
-
-        if (IsMined && IsOpen)
-            graphics.DrawImage(mineSprite, cellRectangle);
-
-        if (!IsOpen)
-            graphics.DrawImage(closedCellSprite, cellRectangle);
-        else
-            graphics.DrawRectangle(Pens.Black, cellRectangle);
-
-        if (IsMarked)
-            graphics.DrawImage(MarkSprite, cellRectangle);
-
-        if (IsIncorrectlyMarked)
-            graphics.DrawImage(crossSprite, cellRectangle);
+        switch (CellState)
+        {
+            case CellState.Closed:
+                graphics.DrawImage(closedCellSprite, cellRectangle);
+                break;
+            case CellState.Marked:
+                graphics.DrawImage(closedCellSprite, cellRectangle);
+                graphics.DrawImage(markSprite, cellRectangle);
+                break;
+            case CellState.IncorrectMarket:
+                graphics.DrawImage(closedCellSprite, cellRectangle);
+                graphics.DrawImage(markSprite, cellRectangle);
+                graphics.DrawImage(crossSprite, cellRectangle);
+                break;
+            case CellState.Opened:
+                graphics.DrawRectangle(Pens.Black, cellRectangle);
+                if (IsMined)
+                    graphics.DrawImage(mineSprite, cellRectangle);
+                else
+                    if (Number > 0)
+                    graphics.DrawString(Number.ToString(), cellFont, brushes[Number], cellRectangle, format);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
     public void DrawSelectedCell(Graphics graphics)
     {
-        if (!IsOpen && !IsMarked)
+        if (CellState==CellState.Closed)
             graphics.DrawImage(selectedCellSprite, cellRectangle);
     }
 }
