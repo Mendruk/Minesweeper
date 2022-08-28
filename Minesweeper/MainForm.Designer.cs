@@ -40,6 +40,7 @@
             // 
             // pictureGameField
             // 
+            this.pictureGameField.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.pictureGameField.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.pictureGameField.Location = new System.Drawing.Point(15, 10);
             this.pictureGameField.Name = "pictureGameField";
@@ -52,6 +53,7 @@
             // 
             // labelMinesText
             // 
+            this.labelMinesText.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.labelMinesText.AutoSize = true;
             this.labelMinesText.Location = new System.Drawing.Point(15, 473);
             this.labelMinesText.Name = "labelMinesText";
@@ -61,6 +63,7 @@
             // 
             // labelMinesCount
             // 
+            this.labelMinesCount.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.labelMinesCount.AutoSize = true;
             this.labelMinesCount.Location = new System.Drawing.Point(75, 473);
             this.labelMinesCount.Name = "labelMinesCount";
@@ -70,6 +73,7 @@
             // 
             // labelTimer
             // 
+            this.labelTimer.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.labelTimer.AutoSize = true;
             this.labelTimer.Location = new System.Drawing.Point(400, 473);
             this.labelTimer.Name = "labelTimer";
@@ -79,6 +83,7 @@
             // 
             // buttonRestart
             // 
+            this.buttonRestart.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.buttonRestart.Location = new System.Drawing.Point(195, 469);
             this.buttonRestart.Name = "buttonRestart";
             this.buttonRestart.Size = new System.Drawing.Size(94, 29);
@@ -103,7 +108,7 @@
             this.Controls.Add(this.labelMinesCount);
             this.Controls.Add(this.labelMinesText);
             this.Controls.Add(this.pictureGameField);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Name = "MainForm";
             this.Text = "Minesweeper";
             ((System.ComponentModel.ISupportInitialize)(this.pictureGameField)).EndInit();
