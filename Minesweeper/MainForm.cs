@@ -1,9 +1,16 @@
 namespace Minesweeper;
 
 public partial class MainForm : Form
-{    
+{
+    private const int MainFormWidth = 451;
+    private const int MainFormHeight = 451;
+
+    private const int GameFieldWidth = 500;
+    private const int GameFieldHeight = 550;
+
     private const int GameFieldHeightInCells = 9;
     private const int GameFieldWidthInCells = 9;
+
     private const int TotalMine = 10;
     private readonly int cellSizeInPixels;
     private readonly Game game;
@@ -11,6 +18,12 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+
+        pictureGameField.Width = MainFormWidth;
+        pictureGameField.Height = MainFormHeight;
+
+        Width = GameFieldWidth;
+        Height = GameFieldHeight;
 
         int cellWidthInPixels = pictureGameField.Width / GameFieldWidthInCells;
         int cellHeightInPixels = pictureGameField.Height / GameFieldHeightInCells;
@@ -37,7 +50,7 @@ public partial class MainForm : Form
         int x = e.X / cellSizeInPixels;
         int y = e.Y / cellSizeInPixels;
 
-        if(IsCellOutsideGameField(x,y))
+        if (IsCellOutsideGameField(x, y))
             return;
 
         game.SelectCell(x, y, out bool isSelectedCellChanged);
@@ -63,13 +76,13 @@ public partial class MainForm : Form
             return;
 
         if (e.Button == MouseButtons.Left)
-            game.TryOpenCell(x,y);
+            game.TryOpenCell(x, y);
 
         if (e.Button == MouseButtons.Right)
-            game.MarkCell(x,y);
+            game.MarkCell(x, y);
 
         if (e.Button == MouseButtons.Middle)
-            game.SmartClick(x,y);
+            game.SmartClick(x, y);
 
         labelMinesCount.Text = game.RemainingUnmarkedMines.ToString();
 

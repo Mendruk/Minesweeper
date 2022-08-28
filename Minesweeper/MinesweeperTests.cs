@@ -1,20 +1,21 @@
 ﻿using NUnit.Framework;
 
 namespace Minesweeper;
+
 //TODO
 [TestFixture]
 internal class MinesweeperTests
 {
-    private readonly int width = 10;
-    private readonly int height = 10;
-    private readonly int cellSize = 1;
-    private readonly int totalMine = 10;
+    private const int Width = 10;
+    private const int Height = 10;
+    private const int CellSize = 1;
+    private const int TotalMine = 10;
     private Game game;
 
     [SetUp]
     public void BeforeEachTests()
     {
-        game = new(width, height, cellSize, totalMine);
+        game = new Game(Width, Height, CellSize, TotalMine);
     }
 
     [Test]
@@ -22,7 +23,7 @@ internal class MinesweeperTests
     {
         int expectedResult = game.RemainingUnmarkedMines;
 
-        Assert.That(expectedResult, Is.EqualTo(totalMine));
+        Assert.That(expectedResult, Is.EqualTo(TotalMine));
     }
 
     [Test]
@@ -31,7 +32,7 @@ internal class MinesweeperTests
         game.MarkCell(1, 1);
         int expectedResult = game.RemainingUnmarkedMines;
 
-        Assert.That(expectedResult, Is.EqualTo(totalMine-1));
+        Assert.That(expectedResult, Is.EqualTo(TotalMine - 1));
     }
 
     [Test]
@@ -41,7 +42,7 @@ internal class MinesweeperTests
         game.MarkCell(1, 1);
         int expectedResult = game.RemainingUnmarkedMines;
 
-        Assert.That(expectedResult, Is.EqualTo(totalMine));
+        Assert.That(expectedResult, Is.EqualTo(TotalMine));
     }
 
     [Test]
@@ -56,7 +57,7 @@ internal class MinesweeperTests
     [Test]
     public void TestSelectCell()
     {
-        game.SelectCell(1,1, out bool expectedResult);
+        game.SelectCell(1, 1, out bool expectedResult);
 
         Assert.That(expectedResult, Is.EqualTo(true));
     }
@@ -69,5 +70,19 @@ internal class MinesweeperTests
         game.SelectCell(1, 1, out bool expectedResult);
 
         Assert.That(expectedResult, Is.EqualTo(false));
+    }
+
+    [Test]
+    public void TestVictoryOrDefeatEvents()
+    {
+        game.Victory += (sender, args) => Assert.Pass();
+        game.Defeat += (sender, args) => Assert.Pass();
+
+        for (int x = 0; x < Width; x++)
+            for (int y = 0; y < Height; y++)
+            {
+                game.TryOpenCell(x, y);
+            }
+        Assert.Fail();
     }
 }

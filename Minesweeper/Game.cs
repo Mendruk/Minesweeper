@@ -3,13 +3,15 @@
 public class Game
 {
     private static readonly Random random = new();
-    private readonly int widthInCells;
+    private readonly Cell[,] cells; //[x,y]
     private readonly int heightInCells;
     private readonly int totalMines;
-    private readonly Cell[,] cells; //[x,y]
-    private Cell selectedCell;
-    private bool areMinesPlanted;
+    private readonly int widthInCells;
 
+    private bool areMinesPlanted;
+    private Cell mistakenlyOpenedCellWithMine;
+    private Cell selectedCell;
+    
     public int ElapsedSeconds;
 
     public Game(int gameFieldWidthInCells, int gameFieldHeightInCells, int cellSizeInPixels, int totalMines)
@@ -33,21 +35,21 @@ public class Game
     public event EventHandler Victory = delegate { };
     public event EventHandler Defeat = delegate { };
 
-    public void SelectCell(int x, int y, out bool isSelectedCellChanged)
+    public void DrawGameField(Graphics graphics)
     {
-        if (selectedCell != cells[x, y])
-        {
-            selectedCell = cells[x, y];
-            isSelectedCellChanged = true;
-        }
-        else
-        {
-            isSelectedCellChanged = false;
-        }
+        if (mistakenlyOpenedCellWithMine != null)
+            mistakenlyOpenedCellWithMine.DrawMistakenlyOpenedCellWithMine(graphics);
+
+        foreach (Cell cell in cells)
+            cell.DrawCell(graphics); 
+        
+        if (selectedCell != null)
+            selectedCell.DrawSelectedCell(graphics);
     }
 
     public void Restart()
     {
+        mistakenlyOpenedCellWithMine = null;
         areMinesPlanted = false;
         RemainingUnmarkedMines = totalMines;
         ElapsedSeconds = 0;
@@ -64,13 +66,17 @@ public class Game
         areMinesPlanted = true;
     }
 
-    public void DrawGameField(Graphics graphics)
+    public void SelectCell(int x, int y, out bool isSelectedCellChanged)
     {
-        foreach (Cell cell in cells)
-            cell.DrawCell(graphics);
-
-        if (selectedCell != null)
-            selectedCell.DrawSelectedCell(graphics);
+        if (selectedCell != cells[x, y])
+        {
+            selectedCell = cells[x, y];
+            isSelectedCellChanged = true;
+        }
+        else
+        {
+            isSelectedCellChanged = false;
+        }
     }
 
     public bool TryOpenCell(int x, int y)
@@ -81,8 +87,10 @@ public class Game
         if (cells[x, y].CellState == CellState.Marked)
             return false;
 
-        if (cells[x, y].IsMined)//Defeat
+        if (cells[x, y].IsMined) //Defeat
         {
+            mistakenlyOpenedCellWithMine = cells[x, y];
+
             OpenCellsWithMine();
 
             Defeat(this, EventArgs.Empty);
@@ -111,9 +119,34 @@ public class Game
     {
         int closedCellCount = cells
             .OfType<Cell>()
-            .Count(cell => (cell.CellState != CellState.Opened));
+            .Count(cell => cell.CellState != CellState.Opened);
 
         return closedCellCount == totalMines;
+    }
+
+    public void SmartClick(int x, int y)
+    {
+        Cell clickedCell = cells[x, y];
+
+        if (clickedCell.CellState == CellState.Marked ||
+            clickedCell.CellState == CellState.Closed ||
+            !areMinesPlanted)
+            return;
+
+        int marksCount = EnumerateAdjacentCells(clickedCell).Count(cell => cell.CellState == CellState.Marked);
+
+        if (clickedCell.Number != marksCount)
+            return;
+
+        foreach (Cell cell in EnumerateAdjacentCells(clickedCell))
+        {
+            if (cell.CellState == CellState.Opened ||
+                cell.CellState == CellState.Marked)
+                continue;
+
+            if (!TryOpenCell(cell.X, cell.Y))
+                return;
+        }
     }
 
     private void OpenConnectedZeroArea(int x, int y)
@@ -131,11 +164,9 @@ public class Game
                 continue;
 
             foreach (Cell cellToEnqueue in EnumerateAdjacentCells(cell))
-            {
-                if (cellToEnqueue.CellState==CellState.Closed&&
-                    !cellToEnqueue.IsMined )
+                if (cellToEnqueue.CellState == CellState.Closed &&
+                    !cellToEnqueue.IsMined)
                     cellsQueue.Enqueue(cellToEnqueue);
-            }
         }
     }
 
@@ -143,9 +174,9 @@ public class Game
     {
         Cell cellToMark = cells[x, y];
 
-        if (cellToMark.CellState==CellState.Marked)
+        if (cellToMark.CellState == CellState.Marked)
         {
-            cellToMark.CellState=CellState.Closed;
+            cellToMark.CellState = CellState.Closed;
             RemainingUnmarkedMines++;
         }
         else if (RemainingUnmarkedMines > 0 && cellToMark.CellState == CellState.Closed)
@@ -155,46 +186,17 @@ public class Game
         }
     }
 
-    public void SmartClick(int x, int y)
-    {
-        Cell clickedCell = cells[x, y];
-
-        if (clickedCell.CellState == CellState.Marked ||
-            clickedCell.CellState == CellState.Closed || 
-            !areMinesPlanted)
-            return;
-
-        int marksCount = EnumerateAdjacentCells(clickedCell).Count(cell => cell.CellState==CellState.Marked);
-
-        if (clickedCell.Number != marksCount)
-            return;
-
-        foreach (Cell cell in EnumerateAdjacentCells(clickedCell))
-        {
-            if (cell.CellState == CellState.Opened ||
-                cell.CellState == CellState.Marked)
-                continue;
-
-            if (!TryOpenCell(cell.X, cell.Y))
-                return;
-        }
-    }
-
     private void DefineCellNumberAroundCell(int x, int y)
     {
-        foreach (Cell cell in EnumerateAdjacentCells(cells[x, y]))
-        {
-            cell.Number++;
-        }
+        foreach (Cell cell in EnumerateAdjacentCells(cells[x, y])) cell.Number++;
     }
-    
-    //todo
+
     private void OpenCellsWithMine()
     {
         foreach (Cell cell in cells)
         {
-            if (!cell.IsMined && cell.CellState==CellState.Marked)
-                cell.CellState= CellState.IncorrectMarket;
+            if (!cell.IsMined && cell.CellState == CellState.Marked)
+                cell.CellState = CellState.IncorrectMarket;
             if (cell.IsMined && cell.CellState != CellState.Marked)
                 cell.CellState = CellState.Opened;
         }

@@ -1,10 +1,9 @@
-﻿namespace Minesweeper
+﻿namespace Minesweeper;
+
+public enum CellState
 {
-    public enum CellState
-    {
-        Closed,
-        Opened,
-        Marked,
-        IncorrectMarket
-    }
+    Closed,
+    Opened,
+    Marked,
+    IncorrectMarket
 }
